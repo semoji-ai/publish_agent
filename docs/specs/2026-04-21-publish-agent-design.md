@@ -7,7 +7,7 @@
 **작성일:** 2026-04-21
 **최종 수정:** 2026-04-22
 **대상 사용자:** 목사, 신학자, 기독교 저술가
-**플랫폼:** Claude Code, Codex (OpenAI), Gemini CLI
+**플랫폼:** 현재 Claude Code 기준으로 검증됨. Codex (OpenAI), Gemini CLI 이식은 도구 매핑(platform-tools.md) 기반으로 가능하나 아직 검증되지 않음.
 
 ---
 
@@ -319,8 +319,12 @@ status: drafting | reviewing | exported
 
 outline:
   - title: "1장: 로마서의 배경"
+    slug: "ch01_로마서의_배경"       # 챕터 번호 + 제목을 sanitize하여 자동 생성
+    draft_file: "ch01_로마서의_배경.md"  # drafts/ 하위 파일명. {slug}.md
     status: draft | review | done
   - title: "2장: 의의 계시"
+    slug: "ch02_의의_계시"
+    draft_file: "ch02_의의_계시.md"
     status: pending
 
 base_document: ""               # 개정판일 경우 원본 경로
@@ -666,6 +670,6 @@ Level 2: chunks/ 상세 내용                             ← 정말 필요한 
 3. **신학적 다양성 존중** — 절대적 교리 기준 없음, 저자의 입장과의 일관성만 검증
 4. **누적형 KB** — 한 번 구축하면 계속 성장, 여러 프로젝트에서 재사용
 5. **옵시디언 호환** — 사용자가 직접 KB를 탐색·편집 가능
-6. **플랫폼 무관** — Claude Code, Codex, Gemini CLI 모두 지원
+6. **플랫폼 중립 설계** — Claude Code 기준 검증됨. Codex, Gemini CLI 이식은 도구 매핑(platform-tools.md) 기반으로 가능하나 아직 검증되지 않음
 7. **추가 비용 없음** — 구독제 LLM만으로 모든 기능 작동
 8. **대화형 UX** — 슬래시 명령어 암기 불필요, 자연어로 대화

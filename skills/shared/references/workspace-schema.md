@@ -198,12 +198,20 @@ status: drafting                # drafting | reviewing | exported
 
 outline:
   - title: "1장: 로마서의 배경"
+    slug: "ch01_로마서의_배경"       # 챕터 번호 + 제목을 sanitize하여 자동 생성
+    draft_file: "ch01_로마서의_배경.md"  # drafts/ 하위 파일명. {slug}.md
     status: done                # draft | review | done | pending
   - title: "2장: 의의 계시"
+    slug: "ch02_의의_계시"
+    draft_file: "ch02_의의_계시.md"
     status: review
   - title: "3장: 죄의 보편성"
+    slug: "ch03_죄의_보편성"
+    draft_file: "ch03_죄의_보편성.md"
     status: drafting
   - title: "4장: 믿음으로 의롭다 함"
+    slug: "ch04_믿음으로_의롭다_함"
+    draft_file: "ch04_믿음으로_의롭다_함.md"
     status: pending
 
 base_document: ""               # revision 타입일 경우 원본 파일 경로. 신규 작성 시 빈 문자열
@@ -213,6 +221,16 @@ wiki_queries:                   # 이 프로젝트에서 참조할 주요 위키
   - "율법과 복음"
   - "바울 신학"
 ```
+
+**slug 생성 규칙:**
+- 형식: `ch{번호(2자리 0패딩)}_{제목 sanitized}`
+- sanitize: 공백 → `_`, 특수문자 제거, 한글·영문·숫자·언더스코어만 허용
+- 예: "1장: 로마서의 배경" → `ch01_로마서의_배경`
+
+**draft_file 규칙:**
+- `{slug}.md` 형식 고정
+- publish-write는 `drafts/{draft_file}` 경로에 초안을 저장해야 한다
+- publish-export는 outline의 `draft_file` 필드로 drafts/ 파일을 찾아야 한다. draft_file이 누락된 항목이 있으면 사용자에게 경고한다
 
 **타입별 의미:**
 - `new_book`: 신규 도서 초안 작성

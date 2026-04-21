@@ -72,6 +72,8 @@ status: drafting
 
 outline:
   - title: "{챕터/섹션 제목}"
+    slug: "{ch번호(2자리 0패딩)_{제목 sanitized}}"  # 자동 생성
+    draft_file: "{slug}.md"                          # 자동 생성
     status: pending
   # 챕터별로 반복
 
@@ -192,8 +194,14 @@ Level 2: 선별된 기사의 chunks/ 로드
 
 ```
 projects/{project_name}/drafts/
-└── ch{번호}_{챕터제목}.md   # 예: ch01_로마서의_배경.md
+└── {draft_file}   # project.yaml outline의 draft_file 값 사용. 예: ch01_로마서의_배경.md
 ```
+
+**draft_file 생성 규칙:**
+- `slug` = `ch{번호(2자리 0패딩)}_{제목 sanitized}` (예: "1장: 로마서의 배경" → `ch01_로마서의_배경`)
+  - sanitize: 공백 → `_`, 특수문자 제거, 한글·영문·숫자·언더스코어만 허용
+- `draft_file` = `{slug}.md`
+- project.yaml outline 각 항목에 `slug`와 `draft_file`을 기록하고, 반드시 해당 파일명으로 drafts/에 저장한다
 
 각 초안 파일의 상단에 다음 프론트매터를 포함한다:
 

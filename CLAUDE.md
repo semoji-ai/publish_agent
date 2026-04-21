@@ -20,20 +20,25 @@
 
 ## 설치
 
-각 스킬 디렉토리를 `~/.claude/skills/`에 심볼릭 링크:
+`skills/` 디렉토리 전체를 `~/.claude/skills/publish-agent`로 연결:
 
 ```bash
-for skill in skills/publish-*; do
-  ln -sf "$(pwd)/$skill" ~/.claude/skills/$(basename $skill)
-done
+# macOS/Linux
+ln -sf "$(pwd)/skills" ~/.claude/skills/publish-agent
 ```
 
-공유 리소스도 링크:
-```bash
-ln -sf "$(pwd)/skills/shared" ~/.claude/skills/publish-shared
+```powershell
+# Windows (PowerShell)
+New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\publish-agent" -Target "$(Get-Location)\skills"
 ```
+
+이렇게 하면 모든 스킬이 `~/.claude/skills/publish-agent/` 하위에 위치하며,
+스킬 내부의 `shared/references/...` 등 상대 경로가 `skills/` 루트 기준으로 자연스럽게 해석됩니다.
 
 ## 사용법
+
+스킬 설치 후 Claude Code에서 `/publish-agent/publish-setup` 형식으로 호출하거나,
+자연어로 대화하면 적절한 스킬이 자동 호출됩니다.
 
 ### 온보딩 (첫 1회)
 1. "워크스페이스 만들어줘" → setup
@@ -48,7 +53,7 @@ ln -sf "$(pwd)/skills/shared" ~/.claude/skills/publish-shared
 - "새 자료 추가해줘" → collect → absorb
 
 ## 플랫폼
-Claude Code, Codex (OpenAI), Gemini CLI 호환
+현재 Claude Code 기준으로 검증됨. Codex (OpenAI), Gemini CLI 이식은 도구 매핑(platform-tools.md) 기반으로 가능하나 아직 검증되지 않음.
 
 ## 설계 문서
 - `docs/specs/2026-04-21-publish-agent-design.md`

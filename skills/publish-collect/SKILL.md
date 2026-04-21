@@ -121,34 +121,30 @@ batch_{YYYYMMDD}
 
 #### ② 인코딩 감지 + UTF-8 정규화
 
-→ `references/format-handling.md`의 "인코딩 처리" 섹션 참조
+→ `publish-collect/references/format-handling.md`의 "인코딩 처리" 섹션 참조
 
 요약:
-- 셸에서 `file --mime-encoding {파일경로}` 실행
-- EUC-KR 또는 CP949 감지 시: `iconv -f EUC-KR -t UTF-8`로 변환
+- 파일 인코딩을 감지한다 (OS별 명령은 `shared/references/platform-tools.md` 8장 참조)
+- EUC-KR 또는 CP949 감지 시: UTF-8로 변환한다 (OS별 명령은 `shared/references/platform-tools.md` 8장 참조)
 - config.yaml `defaults.encoding: utf-8` 이면 감지 생략하고 UTF-8로 처리
 - `defaults.encoding: auto` 이면 항상 자동 감지
 
 #### ③ 마크다운 변환
 
-→ `references/format-handling.md`의 "파일 형식별 변환" 섹션 참조
+→ `publish-collect/references/format-handling.md`의 "파일 형식별 변환" 섹션 참조
 
 형식별 변환 요약:
 - `.md`: 기존 본문 그대로 사용
 - `.txt`: 마크다운 코드블록 없이 본문으로 감싸기
 - `.docx`: `pandoc -f docx -t markdown --wrap=none` 실행
-- `.pdf`: `pdftotext -layout {파일} -` 또는 `pandoc -f pdf -t markdown`
+- `.pdf`: `pdftotext -layout {파일} -` (pdftotext 미설치 시 해당 파일 건너뜀)
 - 웹 URL: WebFetch → HTML → 마크다운 정제
 
 변환 결과 = **정제된 마크다운 본문** (불필요한 메타데이터, 광고, 네비게이션 텍스트 제거)
 
 #### ④ content_hash 계산
 
-정제된 마크다운 본문(프론트매터 제외)의 SHA-256 해시를 계산한다:
-
-```bash
-echo -n "{정제된 본문}" | shasum -a 256
-```
+정제된 마크다운 본문(프론트매터 제외)의 SHA-256 해시를 계산한다 (OS별 명령은 `shared/references/platform-tools.md` 8장 참조).
 
 형식: `sha256:{64자리 16진수}`
 예: `sha256:a3f2c1d4e5b6...`
@@ -243,6 +239,8 @@ deleted: false
 | 이미지 PDF 감지 (텍스트 없음) | 건너뜀, "OCR 후 재입력" 안내 |
 | 네이버블로그/JS 렌더링 URL 추출 불완전 | confidence: low로 저장, 또는 수동 복사 권장 |
 | pandoc 미설치 (DOCX 변환 필요) | 해당 파일 건너뜀, "pandoc 설치 필요" 안내 |
+| pdftotext 미설치 (PDF 변환 필요) | 해당 PDF 파일 건너뜀, 설치 안내 제공 (macOS: `brew install poppler` / Ubuntu: `sudo apt install poppler-utils` / Windows: `choco install poppler`) |
+| 이미지 전용 PDF | 해당 파일 건너뜀, "OCR 처리 후 .txt 또는 .docx로 저장하여 재수집" 안내 |
 | config.yaml 없음 | 즉시 중단, /publish-setup 안내 |
 
 에러 로그는 `{workspace}/logs/collect_{YYYYMMDD}.log`에 저장한다.

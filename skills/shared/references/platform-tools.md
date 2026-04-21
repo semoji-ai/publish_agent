@@ -5,7 +5,9 @@ description: Publish Agent 스킬의 플랫폼별 도구 매핑 가이드. Claud
 
 # 플랫폼 도구 매핑 가이드
 
-Publish Agent 스킬은 Claude Code, Codex(OpenAI), Gemini CLI 모두에서 동작하도록 설계되었다. 이 문서는 각 플랫폼에서 동일한 작업을 수행하는 도구들 간의 매핑 관계를 정의한다.
+> **검증 상태:** 현재 **Claude Code만 실제로 검증됨**. Codex(OpenAI)와 Gemini CLI는 도구 매핑이 정의되어 있으나 아직 테스트되지 않음(TBD). 각 플랫폼 포팅 시 6장 체크리스트로 실제 동작을 확인해야 한다.
+
+Publish Agent 스킬은 Claude Code 기준으로 개발·검증되었으며, Codex(OpenAI)·Gemini CLI로의 이식을 염두에 둔 플랫폼 중립적 설계를 따른다. 이 문서는 각 플랫폼에서 동일한 작업을 수행하는 도구들 간의 매핑 관계를 정의한다.
 
 ---
 
@@ -79,9 +81,9 @@ SKILL.md에서 병렬 처리가 가능한 부분은 다음과 같이 조건부�
 
 | 항목 | Claude Code | 비고 |
 |------|-------------|------|
-| 절대 경로 | 지원 | macOS/Linux 형식 (`/Users/...`) |
+| 절대 경로 | 지원 | macOS/Linux: `/Users/...`, Windows: `C:\Users\...` |
 | 상대 경로 | 지원 | cwd 기준 |
-| 경로 구분자 | `/` | Windows 미지원 (현재 macOS/Linux 타깃) |
+| 경로 구분자 | `/` (macOS/Linux), `\` (Windows) | Windows에서는 PowerShell이 `/`도 허용하는 경우 많음 |
 
 ### 셸 명령 실행 (`Bash`)
 
@@ -210,3 +212,28 @@ publish-absorb/references/absorb-prompt.md
 | Gemini CLI | 미확인 (TBD) | 구현 시 공식 API 문서 기반 도구 매핑 필요 |
 
 **현재 개발 및 검증 대상: Claude Code**
+
+---
+
+## 8. OS별 셸 명령 매핑
+
+스킬에서 셸 명령이 필요한 경우, 아래 표를 참조하여 OS에 맞는 명령을 사용한다.
+
+**원칙: SKILL.md는 행위를 기술하고, 구체적인 명령은 이 표를 참조한다.**
+
+| 작업 | macOS | Linux | Windows (PowerShell) |
+|------|-------|-------|----------------------|
+| 인코딩 감지 | `file --mime-encoding {파일}` | `file --mime-encoding {파일}` | Python: `import chardet; chardet.detect(open(f,'rb').read())` |
+| 인코딩 변환 (EUC-KR → UTF-8) | `iconv -f EUC-KR -t UTF-8 {입력} > {출력}` | `iconv -f EUC-KR -t UTF-8 {입력} > {출력}` | Python: `open(f, encoding='euc-kr').read()` → `open(out,'w',encoding='utf-8').write(...)` |
+| SHA-256 해시 계산 | `shasum -a 256 {파일}` | `sha256sum {파일}` | `Get-FileHash -Algorithm SHA256 {파일}` |
+| PDF 텍스트 추출 | `pdftotext` (설치: `brew install poppler`) | `pdftotext` (설치: `sudo apt install poppler-utils`) | `pdftotext` (설치: `choco install poppler`) |
+| DOCX → 마크다운 변환 | `pandoc -f docx -t markdown` | `pandoc -f docx -t markdown` | `pandoc -f docx -t markdown` (동일) |
+| 심볼릭 링크 생성 | `ln -sf {대상} {링크}` | `ln -sf {대상} {링크}` | `New-Item -ItemType Junction -Path {링크} -Target {대상}` |
+| 디렉토리 목록 조회 | `ls` | `ls` | `Get-ChildItem` |
+
+### Windows 사용 시 참고
+
+- **Python 활용 권장:** 인코딩 감지(`chardet`)와 변환은 Python으로 처리하는 것이 가장 안정적이다. Python 3는 Windows에서도 기본 제공되거나 쉽게 설치 가능하다.
+- **PowerShell 실행 정책:** 스크립트 실행 시 `Set-ExecutionPolicy RemoteSigned` 설정이 필요할 수 있다.
+- **경로 구분자:** PowerShell은 `/`도 대부분 허용하지만, 네이티브 명령에서는 `\`를 사용한다.
+- **pandoc, pdftotext:** Windows에서는 Chocolatey(`choco`) 또는 winget으로 설치한다. 설치 후 PATH 재설정이 필요할 수 있다.

@@ -38,6 +38,17 @@ Level 2: chunks/ 상세 내용 → 실제 집필 참조 (필요한 것만)
 
 토큰 효율을 위해 Level 0에서 충분히 좁힌 후 Level 2로 진입한다.
 
+### 초안 파일 명명 규칙
+
+모든 집필 모드에서 초안 파일명은 `project.yaml` outline의 `draft_file` 필드를 따른다.
+
+- `slug` = `ch{번호(2자리 0패딩)}_{제목 sanitized}`
+  - sanitize: 공백 → `_`, 특수문자 제거, 한글·영문·숫자·언더스코어만 허용
+  - 예: "1장: 로마서의 배경" → `ch01_로마서의_배경`
+- `draft_file` = `{slug}.md`
+- 저장 경로: `projects/{project_name}/drafts/{draft_file}`
+- `/publish-export`는 이 `draft_file` 값을 기준으로 파일을 찾는다. 파일명이 일치하지 않으면 export 시 해당 챕터가 누락된다
+
 ### 토큰 관리
 
 긴 원고를 작업할 때 컨텍스트 한도를 넘지 않도록 **챕터 단위 작업**을 원칙으로 한다:

@@ -90,7 +90,7 @@ KB 기사는 심사 시 "저자가 이 주제에 대해 이전에 어떻게 다�
 
 ### Step 4: 4차원 심사
 
-`references/review-rubric.md`의 기준에 따라 4개 차원에서 심사한다.
+`publish-review/references/review-rubric.md`의 기준에 따라 4개 차원에서 심사한다.
 
 #### 차원 1: 문체 일관성 (Style Consistency)
 - 기준: `style.yaml` + `vocabulary.md`
@@ -113,7 +113,7 @@ KB 기사는 심사 시 "저자가 이 주제에 대해 이전에 어떻게 다�
 
 심사 결과를 `projects/{project_name}/reviews/{YYYYMMDD}_review.md`에 저장한다.
 
-리포트 포맷은 `references/review-rubric.md`의 리포트 템플릿을 따른다:
+리포트 포맷은 `publish-review/references/review-rubric.md`의 리포트 템플릿을 따른다:
 - 각 차원별 등급(A/B/C/D)과 구체적 근거
 - 이슈별 위치 인용 (파일명 + 문장/단락)
 - 구체적 수정 제안

@@ -58,8 +58,10 @@ pandoc --version
   pandoc이 설치되어 있지 않습니다.
   /publish-export 기능 사용 시 필요합니다.
   설치 방법:
-    macOS: brew install pandoc
-    Linux: sudo apt install pandoc
+    macOS:   brew install pandoc
+    Linux:   sudo apt install pandoc
+    Windows: choco install pandoc
+             또는 winget install pandoc
   지금은 건너뛰고 나중에 설치해도 됩니다.
   ```
 

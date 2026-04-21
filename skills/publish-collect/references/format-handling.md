@@ -83,11 +83,18 @@ pdftotext -layout "{입력파일}" -
 - `-layout`: 원본 레이아웃(컬럼 구조 등) 최대한 보존
 - `-`: 표준 출력으로 결과 출력
 
-**pdftotext 미설치 시 대체 도구:** pandoc
+**pdftotext 미설치 시:** 해당 PDF 파일을 건너뛰고 다음 경고를 출력한다.
 
-```bash
-pandoc -f pdf -t markdown --wrap=none "{입력파일}" -o "{임시출력파일}.md"
 ```
+[건너뜀] {파일명} — pdftotext가 설치되어 있지 않습니다.
+PDF 수집을 위해 pdftotext를 설치해 주세요:
+  macOS:   brew install poppler
+  Ubuntu/Debian: sudo apt install poppler-utils
+  Windows: choco install poppler
+           또는 https://github.com/oschwartz10612/poppler-windows 에서 다운로드
+```
+
+pandoc은 PDF 입력 형식을 지원하지 않으므로 대체 도구로 사용하지 않는다.
 
 **이미지 PDF 감지:**
 
@@ -101,7 +108,9 @@ pdftotext 출력이 다음 조건을 충족하면 이미지 PDF로 판정:
 confidence: low로도 저장하지 않는다 (의미 있는 텍스트 없음).
 리포트에 포함:
   [건너뜀] {파일명} — 스캔(이미지) PDF로 판정됨.
-  텍스트를 추출할 수 없습니다. OCR 처리 후 .txt 또는 .docx로 저장하여 다시 수집해 주세요.
+  텍스트를 추출할 수 없습니다.
+  OCR 도구(예: Adobe Acrobat, Tesseract, ABBYY FineReader 등)로 텍스트를 인식한 뒤
+  .txt 또는 .docx 파일로 저장하여 다시 수집해 주세요.
 ```
 
 **PDF 변환 후 정제:**
@@ -168,11 +177,19 @@ confidence: low로도 저장하지 않는다 (의미 있는 텍스트 없음).
 
 ### 인코딩 감지
 
+**macOS / Linux:**
 ```bash
 file --mime-encoding "{파일경로}"
 ```
 
-**출력 예:**
+**Windows (PowerShell — chardet 라이브러리 사용):**
+```powershell
+python3 -c "import chardet; d=chardet.detect(open('{파일경로}','rb').read()); print(d['encoding'])"
+```
+
+(`chardet` 미설치 시: `pip install chardet`)
+
+**출력 예 (macOS/Linux):**
 ```
 document.txt: iso-8859-1
 document.txt: utf-8
@@ -181,18 +198,19 @@ document.txt: unknown-8bit
 
 **인코딩 판별표:**
 
-| `file` 출력값 | 실제 인코딩 | 처리 |
-|--------------|-------------|------|
-| `utf-8` | UTF-8 | 변환 불필요 |
-| `us-ascii` | ASCII (UTF-8 호환) | 변환 불필요 |
-| `iso-8859-1` | 한국어 파일이면 EUC-KR/CP949일 가능성 높음 | iconv 변환 시도 |
-| `unknown-8bit` | EUC-KR/CP949일 가능성 높음 | iconv 변환 시도 |
-| `binary` | 바이너리 파일 | 처리 불가, 건너뜀 |
+| `file` 출력값 (macOS/Linux) | chardet 출력값 (Windows) | 실제 인코딩 | 처리 |
+|-----------------------------|--------------------------|-------------|------|
+| `utf-8` | `UTF-8` | UTF-8 | 변환 불필요 |
+| `us-ascii` | `ascii` | ASCII (UTF-8 호환) | 변환 불필요 |
+| `iso-8859-1` | `EUC-KR` / `CP949` | 한국어 파일이면 EUC-KR/CP949일 가능성 높음 | 변환 시도 |
+| `unknown-8bit` | `EUC-KR` / `CP949` | EUC-KR/CP949일 가능성 높음 | 변환 시도 |
+| `binary` | — | 바이너리 파일 | 처리 불가, 건너뜀 |
 
-`file` 명령이 없거나 불명확한 경우: config.yaml의 `defaults.encoding`을 따른다.
+`file` 명령(macOS/Linux) 또는 chardet(Windows)가 없거나 결과가 불명확한 경우: config.yaml의 `defaults.encoding`을 따른다.
 
 ### UTF-8 변환 (EUC-KR/CP949 → UTF-8)
 
+**macOS / Linux (iconv):**
 ```bash
 iconv -f EUC-KR -t UTF-8 "{입력파일}" > "{임시파일}.utf8"
 ```
@@ -208,9 +226,25 @@ iconv -f EUC-KR -t UTF-8//TRANSLIT "{입력파일}" > "{임시파일}.utf8"
 ```
 (`//TRANSLIT`: 변환 불가 문자를 근사 문자로 대체. confidence를 `medium`으로 설정.)
 
+**Windows (PowerShell — Python 사용):**
+```powershell
+python3 -c "
+content = open('{입력파일}', encoding='euc-kr').read()
+open('{임시파일}.utf8', 'w', encoding='utf-8').write(content)
+"
+```
+
+EUC-KR 실패 시 CP949로 재시도:
+```powershell
+python3 -c "
+content = open('{입력파일}', encoding='cp949').read()
+open('{임시파일}.utf8', 'w', encoding='utf-8').write(content)
+"
+```
+
 모든 시도 실패 시:
 - 해당 파일 confidence: `low`
-- 가능하면 Python fallback:
+- 가능하면 Python fallback (모든 OS 공통):
   ```bash
   python3 -c "open('{출력}','w',encoding='utf-8').write(open('{입력}','rb').read().decode('cp949','replace'))"
   ```
@@ -222,7 +256,7 @@ iconv -f EUC-KR -t UTF-8//TRANSLIT "{입력파일}" > "{임시파일}.utf8"
 |--------------------|------|
 | `utf-8` | 감지 생략. 모든 파일을 UTF-8로 직접 읽음 |
 | `euc-kr` | 감지 생략. 모든 파일을 EUC-KR로 읽고 UTF-8 변환 |
-| `auto` | 항상 자동 감지 실행 (`file --mime-encoding`) |
+| `auto` | 항상 자동 감지 실행 (macOS/Linux: `file --mime-encoding`, Windows: chardet) |
 
 ---
 
@@ -246,11 +280,22 @@ iconv -f EUC-KR -t UTF-8//TRANSLIT "{입력파일}" > "{임시파일}.utf8"
 
 ### 해시 계산 명령
 
+**macOS:**
 ```bash
 echo -n "{정규화된 본문}" | shasum -a 256 | awk '{print $1}'
 ```
 
-또는 Python:
+**Linux:**
+```bash
+echo -n "{정규화된 본문}" | sha256sum | awk '{print $1}'
+```
+
+**Windows (PowerShell):**
+```powershell
+Get-FileHash -Algorithm SHA256 "{임시정규화파일}" | Select-Object -ExpandProperty Hash
+```
+
+또는 Python (모든 OS 공통 — 권장):
 ```bash
 python3 -c "
 import hashlib, sys
@@ -330,7 +375,7 @@ deleted: false
 | 인코딩 변환 실패 | iconv 오류 + Python fallback 실패 | 건너뜀, 로그 기록 | — |
 | 인코딩 변환 부분 성공 | `//TRANSLIT` 사용 | 저장, 일부 문자 손실 경고 | `low` |
 | pandoc 미설치 (DOCX) | `pandoc --version` 실패 | DOCX 파일 전체 건너뜀, 설치 안내 | — |
-| pdftotext 미설치 | 명령 not found | pandoc으로 대체 시도 | — |
+| pdftotext 미설치 | 명령 not found | 해당 PDF 파일 건너뜀, OS별 설치 안내 출력 | — |
 | 네이버 블로그 불완전 추출 | 본문 길이 < 예상 대비 매우 짧음 | 저장하되 confidence: low, 수동 확인 권장 | `low` |
 | HWP 파일 | `.hwp` 확장자 감지 | 건너뜀, DOCX 변환 안내 | — |
 | config.yaml 없음 | 파일 읽기 실패 | 즉시 중단, /publish-setup 안내 | — |
@@ -359,7 +404,7 @@ deleted: false
      │
      ├─ .docx ────→ pandoc 변환 → 마크다운 정제
      │
-     ├─ .pdf ─────→ pdftotext (or pandoc) → 이미지PDF 감지 → 마크다운 정제
+     ├─ .pdf ─────→ pdftotext (미설치 시 건너뜀) → 이미지PDF 감지 → 마크다운 정제
      │
      ├─ URL ──────→ WebFetch → HTML→마크다운 정제
      │
