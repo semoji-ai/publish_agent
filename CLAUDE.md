@@ -35,6 +35,15 @@ New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\publish-agent
 이렇게 하면 모든 스킬이 `~/.claude/skills/publish-agent/` 하위에 위치하며,
 스킬 내부의 `shared/references/...` 등 상대 경로가 `skills/` 루트 기준으로 자연스럽게 해석됩니다.
 
+## 설치 확인 (Windows)
+
+```powershell
+pandoc --version
+py -3 --version
+pdftotext -v        # PDF 수집용 (선택)
+xelatex --version   # PDF export용 (선택)
+```
+
 ## 사용법
 
 스킬 설치 후 Claude Code에서 `/publish-agent/publish-setup` 형식으로 호출하거나,

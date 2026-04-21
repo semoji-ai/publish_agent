@@ -195,54 +195,113 @@ Windows에서 생성된 파일의 기본 인코딩은 로캘에 따라 다르다
 - BOM 감지 시: BOM 바이트를 제거하고 나머지를 UTF-8로 처리한다.
 - 처리 후 저장 시: 항상 **UTF-8 without BOM**으로 저장한다. BOM을 재삽입하지 않는다.
 
-**Python으로 BOM 처리 (모든 OS 공통):**
+### 인코딩 감지 — 표준 라이브러리 전용 알고리즘 (기본)
+
+외부 라이브러리 없이 Python 표준 라이브러리만으로 인코딩을 감지한다. **모든 OS(Windows 포함)에서 동작하며, chardet 설치 불필요.**
+
+**감지 순서:**
+1. 파일을 바이너리로 읽는다.
+2. UTF-8 BOM(`0xEF 0xBB 0xBF`) 확인 → 발견 시 BOM 제거 후 UTF-8로 디코딩.
+3. UTF-8 디코딩 시도 → 성공 시 UTF-8 사용.
+4. CP949 디코딩 시도 → 성공 시 CP949 사용.
+5. EUC-KR 디코딩 시도 → 성공 시 EUC-KR 사용.
+6. 최후 수단: UTF-8 `errors='replace'`로 디코딩 (손실 있음, confidence: low).
+
+**Python 구현 (표준 라이브러리만 사용 — 모든 OS 공통):**
+
 ```python
-content = open('{입력파일}', 'rb').read()
-if content.startswith(b'\xef\xbb\xbf'):
-    content = content[3:]  # BOM 제거
-text = content.decode('utf-8')
-open('{출력파일}', 'w', encoding='utf-8').write(text)  # BOM 없이 저장
+import codecs
+
+def detect_and_read(filepath):
+    raw = open(filepath, 'rb').read()
+    # Step 1: BOM check
+    if raw.startswith(codecs.BOM_UTF8):
+        return raw[3:].decode('utf-8'), 'utf-8-bom'
+    # Step 2: Try UTF-8
+    try:
+        return raw.decode('utf-8'), 'utf-8'
+    except UnicodeDecodeError:
+        pass
+    # Step 3: Try CP949
+    try:
+        return raw.decode('cp949'), 'cp949'
+    except UnicodeDecodeError:
+        pass
+    # Step 4: Try EUC-KR
+    try:
+        return raw.decode('euc-kr'), 'euc-kr'
+    except UnicodeDecodeError:
+        pass
+    # Step 5: Fallback
+    return raw.decode('utf-8', errors='replace'), 'utf-8-replaced'
 ```
 
-**또는 Python의 `utf-8-sig` 코덱 활용:**
-```python
-# utf-8-sig: 읽을 때 BOM 자동 제거, 쓸 때 BOM 없이 저장
-text = open('{입력파일}', encoding='utf-8-sig').read()
-open('{출력파일}', 'w', encoding='utf-8').write(text)
-```
+**Windows에서 실행 시 주의:** Windows에는 `python3` 명령이 없는 경우가 많다. Python 런처를 사용한다:
+- Windows: `py -3 -c "..."`
+- macOS/Linux: `python3 -c "..."`
 
-### 인코딩 감지
+**인라인 실행 예:**
 
-**macOS / Linux:**
-```bash
-file --mime-encoding "{파일경로}"
-```
-
-**Windows (PowerShell — chardet 라이브러리 사용):**
+Windows (PowerShell):
 ```powershell
-python3 -c "import chardet; d=chardet.detect(open('{파일경로}','rb').read()); print(d['encoding'])"
+py -3 -c "
+import codecs
+raw = open('{파일경로}', 'rb').read()
+if raw.startswith(codecs.BOM_UTF8):
+    enc = 'utf-8-bom'
+else:
+    for enc in ('utf-8', 'cp949', 'euc-kr'):
+        try: raw.decode(enc); break
+        except: pass
+    else: enc = 'utf-8-replaced'
+print(enc)
+"
 ```
 
-(`chardet` 미설치 시: `pip install chardet`)
+macOS/Linux:
+```bash
+python3 -c "
+import codecs
+raw = open('{파일경로}', 'rb').read()
+if raw.startswith(codecs.BOM_UTF8):
+    enc = 'utf-8-bom'
+else:
+    for enc in ('utf-8', 'cp949', 'euc-kr'):
+        try: raw.decode(enc); break
+        except: pass
+    else: enc = 'utf-8-replaced'
+print(enc)
+"
+```
 
-**출력 예 (macOS/Linux):**
-```
-document.txt: iso-8859-1
-document.txt: utf-8
-document.txt: unknown-8bit
-```
+macOS/Linux에서는 `file --mime-encoding "{파일경로}"`도 사용 가능하다.
 
 **인코딩 판별표:**
 
-| `file` 출력값 (macOS/Linux) | chardet 출력값 (Windows) | 실제 인코딩 | 처리 |
-|-----------------------------|--------------------------|-------------|------|
-| `utf-8` | `UTF-8` | UTF-8 | 변환 불필요 |
-| `us-ascii` | `ascii` | ASCII (UTF-8 호환) | 변환 불필요 |
-| `iso-8859-1` | `EUC-KR` / `CP949` | 한국어 파일이면 EUC-KR/CP949일 가능성 높음 | 변환 시도 |
-| `unknown-8bit` | `EUC-KR` / `CP949` | EUC-KR/CP949일 가능성 높음 | 변환 시도 |
-| `binary` | — | 바이너리 파일 | 처리 불가, 건너뜀 |
+| 감지 결과 | 실제 인코딩 | 처리 |
+|-----------|-------------|------|
+| `utf-8-bom` | UTF-8 with BOM | BOM 제거 후 UTF-8 처리 |
+| `utf-8` | UTF-8 | 변환 불필요 |
+| `cp949` | CP949 (한국어 Windows) | UTF-8로 변환 |
+| `euc-kr` | EUC-KR | UTF-8로 변환 |
+| `utf-8-replaced` | 판별 불가 | 손실 허용 변환, confidence: low |
 
-`file` 명령(macOS/Linux) 또는 chardet(Windows)가 없거나 결과가 불명확한 경우: config.yaml의 `defaults.encoding`을 따른다.
+### chardet — 선택적 향상 (설치 시에만)
+
+`chardet`가 설치되어 있으면 BOM 확인(위 Step 1) 직후, UTF-8 시도(Step 2) 이전에 chardet로 더 정확한 감지를 시도할 수 있다. **미설치 시에도 표준 라이브러리 알고리즘으로 CP949/BOM 처리가 정상 동작하므로 필수 의존성이 아니다.**
+
+```python
+# chardet 설치 시 선택적 활용 예
+try:
+    import chardet
+    result = chardet.detect(raw)
+    if result['confidence'] > 0.8:
+        return raw.decode(result['encoding']), result['encoding']
+except ImportError:
+    pass  # chardet 없으면 아래 표준 라이브러리 알고리즘으로 진행
+```
+
+설치: `pip install chardet`
 
 ### UTF-8 변환 (EUC-KR/CP949 → UTF-8)
 
@@ -264,7 +323,7 @@ iconv -f EUC-KR -t UTF-8//TRANSLIT "{입력파일}" > "{임시파일}.utf8"
 
 **Windows (PowerShell — Python 사용):**
 ```powershell
-python3 -c "
+py -3 -c "
 content = open('{입력파일}', encoding='euc-kr').read()
 open('{임시파일}.utf8', 'w', encoding='utf-8').write(content)
 "
@@ -272,7 +331,7 @@ open('{임시파일}.utf8', 'w', encoding='utf-8').write(content)
 
 EUC-KR 실패 시 CP949로 재시도:
 ```powershell
-python3 -c "
+py -3 -c "
 content = open('{입력파일}', encoding='cp949').read()
 open('{임시파일}.utf8', 'w', encoding='utf-8').write(content)
 "
@@ -280,7 +339,11 @@ open('{임시파일}.utf8', 'w', encoding='utf-8').write(content)
 
 모든 시도 실패 시:
 - 해당 파일 confidence: `low`
-- 가능하면 Python fallback (모든 OS 공통):
+- 가능하면 Python fallback (Windows):
+  ```powershell
+  py -3 -c "open('{출력}','w',encoding='utf-8').write(open('{입력}','rb').read().decode('cp949','replace'))"
+  ```
+- 가능하면 Python fallback (macOS/Linux):
   ```bash
   python3 -c "open('{출력}','w',encoding='utf-8').write(open('{입력}','rb').read().decode('cp949','replace'))"
   ```
@@ -292,7 +355,7 @@ open('{임시파일}.utf8', 'w', encoding='utf-8').write(content)
 |--------------------|------|
 | `utf-8` | 감지 생략. 모든 파일을 UTF-8로 직접 읽음 |
 | `euc-kr` | 감지 생략. 모든 파일을 EUC-KR로 읽고 UTF-8 변환 |
-| `auto` | 항상 자동 감지 실행 (macOS/Linux: `file --mime-encoding`, Windows: chardet) |
+| `auto` | 항상 자동 감지 실행 (표준 라이브러리 알고리즘 사용. chardet 설치 시 추가 정확도 향상) |
 
 ### 경로 정규화 규칙
 
@@ -340,9 +403,20 @@ Get-FileHash -Algorithm SHA256 "{임시정규화파일}" | Select-Object -Expand
 ```
 
 또는 Python (모든 OS 공통 — 권장):
+
+Windows (PowerShell):
+```powershell
+py -3 -c "
+import hashlib
+text = open('{임시정규화파일}', 'r', encoding='utf-8').read()
+print('sha256:' + hashlib.sha256(text.encode('utf-8')).hexdigest())
+"
+```
+
+macOS/Linux:
 ```bash
 python3 -c "
-import hashlib, sys
+import hashlib
 text = open('{임시정규화파일}', 'r', encoding='utf-8').read()
 print('sha256:' + hashlib.sha256(text.encode('utf-8')).hexdigest())
 "

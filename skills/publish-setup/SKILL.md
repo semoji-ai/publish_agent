@@ -46,24 +46,51 @@ description: Use when users say "/publish-setup", "워크스페이스 만들어�
 
 ### Step 2: 의존성 확인
 
-셸에서 pandoc 설치 여부를 확인한다:
+시스템 환경과 도구 설치 상태를 점검한다.
 
-```bash
-pandoc --version
+#### 2a: OS 감지
+- 실행 환경이 macOS/Linux/Windows인지 판별
+
+#### 2b: 기본 필수 도구
+
+| 도구 | 확인 명령 | 용도 |
+|------|----------|------|
+| pandoc | `pandoc --version` | 파일 변환 + export |
+| Python (Windows만) | `py -3 --version` 또는 `python --version` | 인코딩 처리 |
+
+#### 2c: 선택 기능 도구
+
+| 도구 | 확인 명령 | 용도 | 미설치 시 |
+|------|----------|------|----------|
+| pdftotext | `pdftotext -v` | PDF 수집 | PDF 수집 불가 |
+| xelatex | `xelatex --version` | PDF export | PDF export 불가 |
+| Noto Sans KR | (폰트 확인) | 한글 PDF | 한글 PDF 불가 |
+
+#### 2d: 점검 결과 리포트
+
+```text
+환경 점검 결과 (Windows)
+
+필수 도구:
+  [OK] pandoc v3.1
+  [OK] Python 3.12 (py -3)
+
+선택 도구:
+  [OK] pdftotext v24.04
+  [MISSING] xelatex → PDF export 불가 (설치: choco install miktex)
+  [MISSING] Noto Sans KR → 한글 PDF 불가 (설치: https://fonts.google.com/noto/specimen/Noto+Sans+KR)
+
+현재 가능한 기능:
+  - 텍스트/DOCX/PDF 수집
+  - 위키 구축 및 집필
+  - DOCX/ePub export
+
+현재 불가능한 기능:
+  - PDF export (xelatex + Noto Sans KR 설치 필요)
 ```
 
-- **설치됨:** pandoc 버전 기록, 진행
-- **미설치:** 안내 메시지 출력 후 진행 (export만 불가)
-  ```
-  pandoc이 설치되어 있지 않습니다.
-  /publish-export 기능 사용 시 필요합니다.
-  설치 방법:
-    macOS:   brew install pandoc
-    Linux:   sudo apt install pandoc
-    Windows: choco install pandoc
-             또는 winget install pandoc
-  지금은 건너뛰고 나중에 설치해도 됩니다.
-  ```
+- If essential tool is missing: warn but continue (except pandoc on any OS, Python on Windows)
+- If Python is missing on Windows: strong warning that encoding fallback won't work
 
 ### Step 3: 디렉토리 구조 생성
 
@@ -221,7 +248,15 @@ scripture_citation_style: ""
 저자: {저자 이름} ({author_id})
 생성된 디렉토리: {N}개
 생성된 파일: {M}개
-pandoc: {설치됨 v{버전} / 미설치}
+
+환경 점검 결과:
+  필수 도구:
+    {pandoc: [OK] v{버전} / [MISSING] → export 불가}
+    {Python (Windows): [OK] v{버전} / [MISSING] → 인코딩 처리 불가}
+  선택 도구:
+    {pdftotext: [OK] / [MISSING] → PDF 수집 불가}
+    {xelatex: [OK] / [MISSING] → PDF export 불가}
+    {Noto Sans KR: [OK] / [MISSING] → 한글 PDF 불가}
 
 다음 단계:
 기존 설교문, 저서, 글 등이 있는 폴더 경로나 URL을 알려주세요.

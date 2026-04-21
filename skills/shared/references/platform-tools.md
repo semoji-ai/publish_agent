@@ -223,8 +223,8 @@ publish-absorb/references/absorb-prompt.md
 
 | 작업 | macOS | Linux | Windows (PowerShell) |
 |------|-------|-------|----------------------|
-| 인코딩 감지 | `file --mime-encoding {파일}` | `file --mime-encoding {파일}` | Python: `import chardet; chardet.detect(open(f,'rb').read())` |
-| 인코딩 변환 (EUC-KR → UTF-8) | `iconv -f EUC-KR -t UTF-8 {입력} > {출력}` | `iconv -f EUC-KR -t UTF-8 {입력} > {출력}` | Python: `open(f, encoding='euc-kr').read()` → `open(out,'w',encoding='utf-8').write(...)` |
+| 인코딩 감지 | `file --mime-encoding {파일}` | `file --mime-encoding {파일}` | Python (표준 라이브러리): `py -3 -c "..."` (아래 표준 알고리즘 참조) |
+| 인코딩 변환 (EUC-KR → UTF-8) | `iconv -f EUC-KR -t UTF-8 {입력} > {출력}` | `iconv -f EUC-KR -t UTF-8 {입력} > {출력}` | `py -3 -c "open(out,'w',encoding='utf-8').write(open(f, encoding='cp949').read())"` |
 | SHA-256 해시 계산 | `shasum -a 256 {파일}` | `sha256sum {파일}` | `Get-FileHash -Algorithm SHA256 {파일}` |
 | PDF 텍스트 추출 | `pdftotext` (설치: `brew install poppler`) | `pdftotext` (설치: `sudo apt install poppler-utils`) | `pdftotext` (설치: `choco install poppler`) |
 | DOCX → 마크다운 변환 | `pandoc -f docx -t markdown` | `pandoc -f docx -t markdown` | `pandoc -f docx -t markdown` (동일) |
@@ -233,9 +233,10 @@ publish-absorb/references/absorb-prompt.md
 
 ### Windows 사용 시 참고
 
-- **Python 활용 권장:** 인코딩 감지(`chardet`)와 변환은 Python으로 처리하는 것이 가장 안정적이다. Python 3는 Windows에서도 기본 제공되거나 쉽게 설치 가능하다.
+- **Python 명령어:** Windows에는 `python3`가 없는 경우가 많다. 반드시 `py -3`를 사용한다 (Python Launcher). macOS/Linux는 `python3`를 사용한다.
+- **Python 활용 권장:** 인코딩 감지와 변환은 Python 표준 라이브러리만으로 처리 가능하다. `chardet` 설치는 선택 사항이다 (아래 9장 참조).
 - **PowerShell 실행 정책:** 스크립트 실행 시 `Set-ExecutionPolicy RemoteSigned` 설정이 필요할 수 있다.
-- **경로 구분자:** PowerShell은 `/`도 대부분 허용하지만, 네이티브 명령에서는 `\`를 사용한다.
+- **경로 구분자:** PowerShell은 `/`도 대부분 허용하지만, 네이티브 명령에서는 `\`를 사용한다. Python의 `open()`은 Windows에서도 `/` 경로를 그대로 허용하므로 변환 불필요.
 - **pandoc, pdftotext:** Windows에서는 Chocolatey(`choco`) 또는 winget으로 설치한다. 설치 후 PATH 재설정이 필요할 수 있다.
 
 ---
@@ -267,14 +268,81 @@ publish-absorb/references/absorb-prompt.md
 | 중국어 (간체) | GBK |
 | 서유럽 | CP1252 |
 
+### 표준 라이브러리 인코딩 감지 알고리즘 (정식 참조)
+
+외부 라이브러리 없이 Python 표준 라이브러리만으로 동작하는 인코딩 감지 함수. **Windows(`py -3`), macOS/Linux(`python3`) 모두에서 동작.**
+
+```python
+import codecs
+
+def detect_and_read(filepath):
+    raw = open(filepath, 'rb').read()
+    # Step 1: BOM check
+    if raw.startswith(codecs.BOM_UTF8):
+        return raw[3:].decode('utf-8'), 'utf-8-bom'
+    # Step 2: Try UTF-8
+    try:
+        return raw.decode('utf-8'), 'utf-8'
+    except UnicodeDecodeError:
+        pass
+    # Step 3: Try CP949
+    try:
+        return raw.decode('cp949'), 'cp949'
+    except UnicodeDecodeError:
+        pass
+    # Step 4: Try EUC-KR
+    try:
+        return raw.decode('euc-kr'), 'euc-kr'
+    except UnicodeDecodeError:
+        pass
+    # Step 5: Fallback
+    return raw.decode('utf-8', errors='replace'), 'utf-8-replaced'
+```
+
+### 선택 의존성 (chardet)
+
+`chardet`는 선택적으로 설치하여 감지 정확도를 높일 수 있다. **미설치 시에도 위 표준 알고리즘으로 정상 동작하므로 필수 의존성이 아니다.**
+
+```python
+# chardet 설치 시 BOM 확인 직후, UTF-8 시도 이전에 삽입 가능
+try:
+    import chardet
+    result = chardet.detect(raw)
+    if result['confidence'] > 0.8:
+        return raw.decode(result['encoding']), result['encoding']
+except ImportError:
+    pass  # 미설치 시 표준 라이브러리 알고리즘으로 계속 진행
+```
+
+설치: `pip install chardet`
+
 ### 경로
 
-**경로 구분자 정규화 원칙:**
-- 내부 저장(YAML 프론트매터, JSON, config.yaml 등)에서 경로 구분자는 항상 **`/` (슬래시)**를 사용한다.
+**저장 계층 / 실행 계층 분리 원칙:**
+
+| 계층 | 경로 구분자 | 적용 범위 |
+|------|------------|---------|
+| 저장 계층 | 항상 `/` | YAML/JSON/프론트매터에 기록하는 모든 경로 |
+| 실행 계층 | Windows 네이티브 명령은 `\` | PowerShell 네이티브 CLI 도구 실행 직전에만 변환 |
+
 - `source_path`, `draft_file`, `base_document`, 워크스페이스 경로 등 모든 YAML/JSON 저장 경로는 `/` 사용.
 - Windows 경로도 내부적으로는 슬래시로 표기한다: `C:/Users/pastor/publish_workspace/`
-- 실제 파일 접근(셸 명령 실행) 시에는 OS에 맞는 구분자로 변환한다.
+- Python의 `open()`은 Windows에서 `/` 경로를 그대로 허용하므로, Python 명령은 저장된 경로를 변환 없이 그대로 사용 가능.
+- PowerShell 네이티브 명령(pdftotext 등 Windows CLI 도구)은 `\`가 필요하므로 실행 직전에 변환한다.
 - wikilinks(`[[기사명]]`)에는 경로 구분자를 포함하지 않는다 — 기사명만 사용한다.
+
+**PowerShell 네이티브 명령 실행 시 경로 변환 예:**
+```powershell
+# 저장된 경로(/구분자)를 네이티브 실행 직전에 \로 변환
+$nativePath = $storedPath -replace '/', '\'
+pdftotext -layout "$nativePath" output.txt
+```
+
+Python 명령은 변환 불필요:
+```powershell
+# Python open()은 /를 그대로 허용 — 변환 없이 사용
+py -3 -c "text = open('C:/Users/pastor/sermons/설교문.txt', encoding='utf-8').read()"
+```
 
 **백슬래시 → 슬래시 변환 시점:**
 - 사용자가 Windows 경로(`C:\Users\...`)를 입력하면 즉시 슬래시로 변환하여 저장한다.

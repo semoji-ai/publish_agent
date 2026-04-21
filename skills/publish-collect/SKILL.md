@@ -121,14 +121,15 @@ batch_{YYYYMMDD}
 
 #### ② 인코딩 감지 + UTF-8 정규화
 
-→ `publish-collect/references/format-handling.md`의 "인코딩 처리" 섹션 참조
+→ `publish-collect/references/format-handling.md`의 "인코딩 처리" 섹션 참조 (표준 라이브러리 알고리즘 포함)
+→ OS별 명령 참조: `shared/references/platform-tools.md` 8장, 9장
 
 요약:
-- 파일 인코딩을 감지한다 (OS별 명령은 `shared/references/platform-tools.md` 8장 참조)
-- EUC-KR 또는 CP949 감지 시: UTF-8로 변환한다 (OS별 명령은 `shared/references/platform-tools.md` 8장 참조)
+- 파일을 바이너리로 읽어 BOM → UTF-8 → CP949 → EUC-KR 순서로 디코딩을 시도한다 (표준 라이브러리만 사용, chardet 불필요)
+- chardet 설치 시 더 정확한 감지 가능하나, 미설치 시에도 표준 라이브러리만으로 CP949/BOM 처리 가능
 - config.yaml `defaults.encoding: utf-8` 이면 감지 생략하고 UTF-8로 처리
-- `defaults.encoding: auto` 이면 항상 자동 감지
-- **Windows 환경 주의:** Windows 한국어 로캘의 기본 인코딩은 CP949이다. 인코딩이 명시되지 않은 파일은 CP949 가능성이 높다 (인코딩 규칙은 `shared/references/platform-tools.md` 9장 참조)
+- `defaults.encoding: auto` 이면 항상 자동 감지 실행
+- **Windows 환경 주의:** Windows 한국어 로캘의 기본 인코딩은 CP949이다. 인코딩이 명시되지 않은 파일은 CP949 가능성이 높다
 - **UTF-8 BOM 처리:** 파일 시작에 BOM(`0xEF 0xBB 0xBF`)이 감지되면 제거 후 처리한다. 저장 시 항상 UTF-8 without BOM으로 저장한다
 - **source_path 경로 정규화:** source_path에 백슬래시(`\`)가 포함된 경우(Windows 경로), 슬래시(`/`)로 변환하여 프론트매터에 저장한다
 

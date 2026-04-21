@@ -33,9 +33,33 @@ description: Use when users say "/publish-export", "PDF로 만들어줘", "출�
 
 ## WHEN TRIGGERED - EXECUTE IMMEDIATELY
 
-### Step 1: 포맷별 의존성 확인
+### Step 1: 대상 프로젝트 선택
 
-출력 포맷에 따라 필요한 도구가 다르다. 사용자가 원하는 포맷을 먼저 파악한 뒤(Step 2에서 확인), 해당 포맷에 필요한 의존성을 점검한다. 포맷 미정 상태에서는 pandoc 설치 여부만 먼저 확인한다.
+사용자가 프로젝트명을 지정하지 않은 경우, `projects/` 디렉토리의 프로젝트 목록을 보여주고 선택하게 한다:
+
+```
+어떤 프로젝트를 내보낼까요?
+  1. 로마서 강해 (projects/로마서_강해/)
+  2. 은혜의 교리 (projects/은혜의_교리/)
+  3. ...
+```
+
+### Step 2: 출력 포맷 선택
+
+사용자가 포맷을 지정하지 않은 경우:
+
+```
+출력 포맷을 선택하세요:
+  1. DOCX — Microsoft Word 문서 (편집 가능)
+  2. PDF  — 인쇄용 PDF (한글 폰트 필요)
+  3. ePub — 전자책 (뷰어 호환)
+```
+
+여러 포맷을 동시에 선택할 수 있다.
+
+### Step 3: 선택 포맷별 의존성 점검
+
+선택된 포맷에 따라 필요한 도구를 점검한다.
 
 **포맷별 필수 의존성:**
 
@@ -89,10 +113,10 @@ Noto Sans KR 폰트 확인 (Windows PowerShell):
 [System.Drawing.Text.InstalledFontCollection]::new().Families | Where-Object { $_.Name -like "*Noto Sans KR*" }
 ```
 
-PDF 의존성 누락 시 — 즉시 실패하지 않고 대안을 제시한다:
+**PDF 의존성 누락 시 — 즉시 실패하지 않고 대안을 제시한다:**
 
 ```
-PDF 생성에 필요한 도구가 설치되어 있지 않습니다.
+PDF는 지금 생성할 수 없습니다 (xelatex 미설치).
 
 누락된 항목:
   - xelatex: PDF 렌더링 엔진
@@ -109,43 +133,19 @@ PDF 생성에 필요한 도구가 설치되어 있지 않습니다.
     MiKTeX(https://miktex.org) 설치 — xelatex 포함 (choco install miktex 도 가능)
     Noto Sans KR 폰트: https://fonts.google.com/noto/specimen/Noto+Sans+KR 에서 다운로드 후 설치
 
-지금 DOCX 또는 ePub으로 먼저 내보낼까요?
-  → "예"라고 하면 DOCX로 내보냅니다.
-  → 의존성 설치 후 다시 시도하면 PDF를 생성할 수 있습니다.
+현재 가능한 포맷:
+  - DOCX
+  - ePub
+
+어떤 포맷으로 계속할까요?
 ```
 
-→ 사용자가 DOCX 대안을 수락하면 DOCX로 전환하여 Step 3~4를 진행한다.
+→ 사용자가 대안 포맷을 선택하면 해당 포맷으로 Step 4~6을 진행한다.
 → 사용자가 거부하면 중단한다.
 
-**pandoc 설치됨 + PDF 의존성 충족:** 버전을 확인하고 진행한다.
+**pandoc 설치됨 + 선택 포맷 의존성 충족:** 버전을 확인하고 진행한다.
 
-### Step 2: 대상 프로젝트 및 출력 포맷 확인
-
-**프로젝트 확인:**
-
-사용자가 프로젝트명을 지정하지 않은 경우, `projects/` 디렉토리의 프로젝트 목록을 보여주고 선택하게 한다:
-
-```
-어떤 프로젝트를 내보낼까요?
-  1. 로마서 강해 (projects/로마서_강해/)
-  2. 은혜의 교리 (projects/은혜의_교리/)
-  3. ...
-```
-
-**출력 포맷 확인:**
-
-사용자가 포맷을 지정하지 않은 경우:
-
-```
-출력 포맷을 선택하세요:
-  1. DOCX — Microsoft Word 문서 (편집 가능)
-  2. PDF  — 인쇄용 PDF (한글 폰트 필요)
-  3. ePub — 전자책 (뷰어 호환)
-```
-
-여러 포맷을 동시에 선택할 수 있다.
-
-### Step 3: 프로젝트 설정 및 초안 취합
+### Step 4: 초안 취합
 
 `projects/{project_name}/project.yaml`을 읽어 프로젝트 정보를 로드한다.
 
@@ -192,7 +192,7 @@ outline:
 - 저자: `config.yaml`의 `author.name`
 - 날짜: 오늘 날짜
 
-### Step 4: pandoc 변환 실행
+### Step 5: pandoc 변환 실행
 
 출력 포맷별로 다음 명령을 실행한다.
 
@@ -264,7 +264,7 @@ pandoc _export_combined.md \
   -o projects/{project_name}/exports/epub/{파일명}.epub
 ```
 
-### Step 5: 완료 리포트
+### Step 6: 완료 리포트
 
 변환이 완료된 후 사용자에게 보고한다:
 
