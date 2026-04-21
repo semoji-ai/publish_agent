@@ -105,6 +105,12 @@ export:
 - `defaults.encoding: auto`: 파일별 인코딩 자동 감지 시도, 실패 시 utf-8 가정.
 - `export.pandoc_path`: 절대 경로 지정 가능 (예: `/usr/local/bin/pandoc`).
 
+**경로 표기 규칙:**
+- `workspace` 경로는 내부적으로 항상 `/` 구분자를 사용한다 (Windows에서도).
+  - 올바른 예: `C:/Users/pastor/publish_workspace/`
+  - 잘못된 예: `C:\Users\pastor\publish_workspace\`
+- 사용자가 백슬래시로 경로를 입력하면 `/publish-setup`이 자동으로 슬래시로 변환하여 저장한다.
+
 ---
 
 ## 4.4 _backlinks.json 스키마
@@ -309,3 +315,8 @@ deleted: false                    # soft delete 시 true로 변경
 ```
 
 **중복 감지:** 새 항목 수집 시 `content_hash`를 기존 raw/entries/ 전체와 비교. 동일한 해시가 존재하면 수집 차단 + 사용자에게 기존 항목 참조 안내.
+
+**경로 필드 규칙:**
+- `source_path`는 항상 `/` 구분자로 정규화하여 저장한다.
+  - Windows 원본 경로가 `C:\Users\pastor\sermons\설교문.txt`이더라도 `C:/Users/pastor/sermons/설교문.txt`로 저장한다.
+- `source_url`은 URL 형식이므로 `/`를 그대로 사용한다.

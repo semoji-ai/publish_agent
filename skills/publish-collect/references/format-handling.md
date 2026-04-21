@@ -175,6 +175,42 @@ confidence: low로도 저장하지 않는다 (의미 있는 텍스트 없음).
 
 한국어 문서는 EUC-KR 또는 CP949(MS949) 인코딩으로 저장된 경우가 있다. 수집 전에 반드시 UTF-8로 변환한다.
 
+### Windows 기본 인코딩
+
+Windows에서 생성된 파일의 기본 인코딩은 로캘에 따라 다르다. 한국어 목사가 Windows에서 작성한 텍스트 파일은 CP949일 가능성이 높다.
+
+| Windows 로캘 | 기본 인코딩 |
+|-------------|-----------|
+| 한국어 | CP949 |
+| 일본어 | Shift_JIS |
+| 중국어 (간체) | GBK |
+| 서유럽 | CP1252 |
+
+### UTF-8 BOM 처리
+
+일부 Windows 편집기(메모장 등)는 UTF-8 파일 앞에 BOM(`0xEF 0xBB 0xBF`)을 삽입한다.
+
+**BOM 감지 규칙:**
+- 파일 첫 3바이트가 `0xEF 0xBB 0xBF`이면 UTF-8 BOM 파일이다.
+- BOM 감지 시: BOM 바이트를 제거하고 나머지를 UTF-8로 처리한다.
+- 처리 후 저장 시: 항상 **UTF-8 without BOM**으로 저장한다. BOM을 재삽입하지 않는다.
+
+**Python으로 BOM 처리 (모든 OS 공통):**
+```python
+content = open('{입력파일}', 'rb').read()
+if content.startswith(b'\xef\xbb\xbf'):
+    content = content[3:]  # BOM 제거
+text = content.decode('utf-8')
+open('{출력파일}', 'w', encoding='utf-8').write(text)  # BOM 없이 저장
+```
+
+**또는 Python의 `utf-8-sig` 코덱 활용:**
+```python
+# utf-8-sig: 읽을 때 BOM 자동 제거, 쓸 때 BOM 없이 저장
+text = open('{입력파일}', encoding='utf-8-sig').read()
+open('{출력파일}', 'w', encoding='utf-8').write(text)
+```
+
 ### 인코딩 감지
 
 **macOS / Linux:**
@@ -257,6 +293,14 @@ open('{임시파일}.utf8', 'w', encoding='utf-8').write(content)
 | `utf-8` | 감지 생략. 모든 파일을 UTF-8로 직접 읽음 |
 | `euc-kr` | 감지 생략. 모든 파일을 EUC-KR로 읽고 UTF-8 변환 |
 | `auto` | 항상 자동 감지 실행 (macOS/Linux: `file --mime-encoding`, Windows: chardet) |
+
+### 경로 정규화 규칙
+
+raw entry 프론트매터에 저장하는 `source_path`는 항상 슬래시(`/`) 구분자를 사용한다.
+
+- Windows 경로 입력 예: `C:\Users\pastor\sermons\2026\설교문.txt`
+- 저장 시 변환: `C:/Users/pastor/sermons/2026/설교문.txt`
+- 모든 백슬래시(`\`)를 슬래시(`/`)로 변환한 뒤 프론트매터에 기록한다.
 
 ---
 

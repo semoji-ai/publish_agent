@@ -128,6 +128,9 @@ batch_{YYYYMMDD}
 - EUC-KR 또는 CP949 감지 시: UTF-8로 변환한다 (OS별 명령은 `shared/references/platform-tools.md` 8장 참조)
 - config.yaml `defaults.encoding: utf-8` 이면 감지 생략하고 UTF-8로 처리
 - `defaults.encoding: auto` 이면 항상 자동 감지
+- **Windows 환경 주의:** Windows 한국어 로캘의 기본 인코딩은 CP949이다. 인코딩이 명시되지 않은 파일은 CP949 가능성이 높다 (인코딩 규칙은 `shared/references/platform-tools.md` 9장 참조)
+- **UTF-8 BOM 처리:** 파일 시작에 BOM(`0xEF 0xBB 0xBF`)이 감지되면 제거 후 처리한다. 저장 시 항상 UTF-8 without BOM으로 저장한다
+- **source_path 경로 정규화:** source_path에 백슬래시(`\`)가 포함된 경우(Windows 경로), 슬래시(`/`)로 변환하여 프론트매터에 저장한다
 
 #### ③ 마크다운 변환
 

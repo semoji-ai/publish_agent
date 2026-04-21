@@ -67,6 +67,10 @@ pandoc --version
 
 ### Step 3: 디렉토리 구조 생성
 
+**Windows 경로 처리:** 사용자가 워크스페이스 경로를 백슬래시(`\`)로 입력한 경우, 슬래시(`/`)로 변환한 뒤 저장한다. config.yaml에 저장되는 모든 경로는 `/` 구분자를 사용한다.
+- 입력 예: `C:\Users\pastor\publish_workspace`
+- 저장 값: `C:/Users/pastor/publish_workspace`
+
 워크스페이스 경로에 다음 구조를 생성한다:
 
 ```

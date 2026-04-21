@@ -237,3 +237,46 @@ publish-absorb/references/absorb-prompt.md
 - **PowerShell 실행 정책:** 스크립트 실행 시 `Set-ExecutionPolicy RemoteSigned` 설정이 필요할 수 있다.
 - **경로 구분자:** PowerShell은 `/`도 대부분 허용하지만, 네이티브 명령에서는 `\`를 사용한다.
 - **pandoc, pdftotext:** Windows에서는 Chocolatey(`choco`) 또는 winget으로 설치한다. 설치 후 PATH 재설정이 필요할 수 있다.
+
+---
+
+## 9. Windows 인코딩 및 경로 처리 규칙
+
+### 인코딩
+
+**Windows 기본 인코딩 주의:**
+- 한국어 Windows의 기본 인코딩은 **CP949** (EUC-KR 호환 확장 코드페이지)이다. UTF-8이 아니다.
+- 한국인 사용자가 Windows에서 생성한 `.txt` 파일은 CP949일 가능성이 높다.
+- `config.yaml`의 `defaults.encoding: utf-8` 기본값은 이를 고려하지 못한다. Windows 사용자에게는 `auto`를 권장한다.
+
+**UTF-8 BOM (Byte Order Mark) 처리:**
+- Windows의 메모장(Notepad) 등 일부 편집기는 UTF-8 파일 앞에 BOM(`0xEF 0xBB 0xBF`)을 자동 삽입한다.
+- BOM이 있는 파일을 그대로 처리하면 텍스트 첫 부분에 불필요한 문자가 포함된다.
+- 파일 읽기 시 BOM을 감지하면 반드시 제거하고 처리한다.
+- 스킬이 파일을 저장할 때는 항상 **UTF-8 without BOM**으로 저장한다.
+
+**Windows 콘솔 UTF-8 전환:**
+- Windows 콘솔(cmd, PowerShell)에서 UTF-8 출력이 필요한 경우 `chcp 65001`을 먼저 실행한다.
+
+**OS별 기본 인코딩 참고표:**
+
+| Windows 로캘 | 기본 인코딩 |
+|-------------|-----------|
+| 한국어 | CP949 |
+| 일본어 | Shift_JIS |
+| 중국어 (간체) | GBK |
+| 서유럽 | CP1252 |
+
+### 경로
+
+**경로 구분자 정규화 원칙:**
+- 내부 저장(YAML 프론트매터, JSON, config.yaml 등)에서 경로 구분자는 항상 **`/` (슬래시)**를 사용한다.
+- `source_path`, `draft_file`, `base_document`, 워크스페이스 경로 등 모든 YAML/JSON 저장 경로는 `/` 사용.
+- Windows 경로도 내부적으로는 슬래시로 표기한다: `C:/Users/pastor/publish_workspace/`
+- 실제 파일 접근(셸 명령 실행) 시에는 OS에 맞는 구분자로 변환한다.
+- wikilinks(`[[기사명]]`)에는 경로 구분자를 포함하지 않는다 — 기사명만 사용한다.
+
+**백슬래시 → 슬래시 변환 시점:**
+- 사용자가 Windows 경로(`C:\Users\...`)를 입력하면 즉시 슬래시로 변환하여 저장한다.
+- Python 예시: `path.replace('\\', '/')`
+- PowerShell 예시: `$path -replace '\\', '/'`
