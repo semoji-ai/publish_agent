@@ -157,7 +157,7 @@ defaults:
   source_type: primary           # 수집 시 기본 자료 유형
   batch_size: 15                 # absorb 배치 크기 (조절 가능)
   review_max_rounds: 3           # 심사 루프 최대 횟수
-  encoding: utf-8                # 입력 파일 인코딩 (utf-8 | euc-kr | auto)
+  encoding: auto                 # 입력 파일 인코딩 (utf-8 | euc-kr | auto). Windows에서는 auto 필수
 
 export:
   pandoc_path: pandoc            # pandoc 경로 (setup 시 존재 확인)

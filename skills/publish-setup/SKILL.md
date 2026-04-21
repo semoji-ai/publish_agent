@@ -56,7 +56,7 @@ description: Use when users say "/publish-setup", "워크스페이스 만들어�
 | 도구 | 확인 명령 | 용도 |
 |------|----------|------|
 | pandoc | `pandoc --version` | 파일 변환 + export |
-| Python (Windows만) | `py -3 --version` 또는 `python --version` | 인코딩 처리 |
+| Python (Windows만) | `py -3 --version` | 인코딩 처리 |
 
 #### 2c: 선택 기능 도구
 
@@ -89,8 +89,18 @@ description: Use when users say "/publish-setup", "워크스페이스 만들어�
   - PDF export (xelatex + Noto Sans KR 설치 필요)
 ```
 
-- If essential tool is missing: warn but continue (except pandoc on any OS, Python on Windows)
-- If Python is missing on Windows: strong warning that encoding fallback won't work
+**필수 도구 실패 처리 규칙:**
+
+| 상황 | 동작 | 영향 |
+|------|------|------|
+| pandoc 없음 | 경고 후 계속 | collect 일부 가능 (md/txt만), export 전체 불가 |
+| Windows에서 `py -3` 없음 | 경고 후 계속 | 인코딩 자동 감지 불가, CP949 텍스트 수집 실패 가능 |
+| pdftotext 없음 | 안내 후 계속 | PDF 수집 불가 |
+| xelatex 없음 | 안내 후 계속 | PDF export 불가 |
+| Noto Sans KR 없음 | 안내 후 계속 | 한글 PDF export 불가 |
+
+- setup 자체는 어떤 도구가 없어도 **중단하지 않는다** (워크스페이스 생성은 항상 완료)
+- 완료 리포트에서 "가능한 기능 / 제한된 기능"을 명확히 분리하여 표시
 
 ### Step 3: 디렉토리 구조 생성
 
@@ -137,7 +147,7 @@ defaults:
   source_type: primary
   batch_size: 15
   review_max_rounds: 3
-  encoding: utf-8
+  encoding: auto                   # Windows: auto (CP949 자동 감지), macOS/Linux: utf-8도 가능
 
 export:
   pandoc_path: "{pandoc 경로 또는 pandoc}"
