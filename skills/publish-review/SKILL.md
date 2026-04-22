@@ -55,6 +55,27 @@ config.yaml에서 워크스페이스 경로와 author_id를 로드한다.
 
 > **Soft delete 정의:** 프론트매터에 `deleted: true` 플래그가 설정된 상태. 파일은 디스크에 유지되나 `_index.md`에서 제외되고, 심사·검색·absorb 대상에서 완전히 제외된다. `/publish-curate`에서 `deleted: false`로 복구 가능.
 
+### Step 1.5: 대용량 초안 분할 심사 판단
+
+심사 대상 파일의 줄 수를 확인한다:
+
+```
+500줄 이하 → 단일 심사 (기존 흐름)
+500줄 초과 → 섹션 단위 분할 심사:
+  1. 파일의 헤딩 구조 또는 챕터 구분점 파악 (Read로 전체 구조만 스캔)
+  2. 섹션별로 독립적으로 심사 진행
+  3. 각 섹션 심사 완료 후 결과를 파일에 기록 (컨텍스트에 누적하지 않음)
+  4. 모든 섹션 완료 후 종합 판정 생성
+```
+
+분할 심사 시 각 섹션마다:
+- 프로필(style.yaml + theology.yaml) + 관련 wiki + 해당 섹션 텍스트만 컨텍스트에 로드
+- 섹션 심사 결과를 `reviews/{YYYYMMDD}_review_r{N}_section_{M}.md`에 저장
+- 해당 섹션 원문은 컨텍스트에서 제거 후 다음 섹션으로 이동
+- 토큰 예산: 섹션당 읽기 40K + 처리 30K + 출력 20K = 90K
+
+→ 상세 규칙: `shared/references/context-management.md`의 "review 단계 컨텍스트 관리" 섹션 참조
+
 ### Step 2: 저자 프로필 전체 로드
 
 `authors/{author_id}/`의 4개 파일을 모두 읽는다:
@@ -186,4 +207,5 @@ reviews/{YYYYMMDD}_review_r{N}_unresolved.md에 미해결 이슈 목록을 저�
 - `shared/references/author-profile-schema.md` — 저자 프로필 4파일 스키마
 - `shared/references/search-strategy.md` — wiki/ 계층적 검색 전략
 - `shared/references/workspace-schema.md` — 워크스페이스 구조 + 스키마
+- `shared/references/context-management.md` — 컨텍스트 윈도우 관리 전략 + 섹션 분할 심사 규칙
 - `publish-review/references/review-rubric.md` — 4차원 심사 기준표 + 리포트 템플릿

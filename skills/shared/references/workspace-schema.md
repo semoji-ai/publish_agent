@@ -309,6 +309,10 @@ content_hash: "sha256:abc123..."  # 정제된 본문의 SHA-256 해시 (중복 �
 tags: []                          # 수집 시 자동 부여 태그 (선택)
 absorbed: false                   # absorb 완료 시 true로 변경
 deleted: false                    # soft delete 시 true로 변경
+parent_source_id: ""              # 대용량 파일 분할 시 원본 entry의 source_id. 분할 안 된 경우 빈 문자열
+part: 0                           # 파트 번호 (0 = 분할 안 됨, 1부터 시작)
+total_parts: 0                    # 전체 파트 수 (0 = 분할 안 됨)
+part_title: ""                    # 이 파트의 제목 (감지된 경우)
 ---
 
 {정제된 원문 내용 — 마크다운 형식}
@@ -320,3 +324,9 @@ deleted: false                    # soft delete 시 true로 변경
 - `source_path`는 항상 `/` 구분자로 정규화하여 저장한다.
   - Windows 원본 경로가 `C:\Users\pastor\sermons\설교문.txt`이더라도 `C:/Users/pastor/sermons/설교문.txt`로 저장한다.
 - `source_url`은 URL 형식이므로 `/`를 그대로 사용한다.
+
+**분할 파일 필드 규칙 (대용량 파일 처리):**
+- `parent_source_id`: 500줄 이상 파일이 분할된 경우, 각 파트 entry에 원본 source_id를 기록한다. 원본 entry 자체(`is_parent: true`)와 분할 안 된 단일 entry는 빈 문자열.
+- `part` / `total_parts`: 분할된 경우 파트 순번과 총 파트 수를 기록한다. 분할 안 된 경우 모두 0.
+- `part_title`: 분할점에서 감지된 챕터/섹션 제목. 없으면 빈 문자열.
+- absorb 스킬은 `parent_source_id`가 비어 있지 않은 entry를 처리할 때 관련 파트들을 함께 고려하여 위키 기사를 구성할 수 있다.

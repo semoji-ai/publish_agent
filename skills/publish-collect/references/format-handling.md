@@ -546,7 +546,110 @@ deleted: false
 
 ---
 
+---
+
+## 대용량 파일 분할 처리
+
+500줄을 초과하는 파일은 단일 raw entry로 저장하지 않고 분할한다. 컨텍스트 윈도우 보호를 위한 필수 단계다.
+
+### 파일 크기 감지
+
+파일 전체를 읽지 않고 줄 수를 먼저 파악한다:
+
+```bash
+# macOS/Linux
+wc -l "{파일경로}"
+```
+
+```powershell
+# Windows (PowerShell)
+(Get-Content "{파일경로}").Count
+```
+
+또는 Python (모든 OS 공통):
+```python
+with open(filepath, 'r', encoding='utf-8') as f:
+    line_count = sum(1 for _ in f)
+```
+
+500줄 이하면 기존 단일 entry 흐름으로 진행. 500줄 초과면 분할 처리로 전환.
+
+### 형식별 자연 분할점 탐지 규칙
+
+**Markdown (`.md`):**
+- `# ` (H1), `## ` (H2), `### ` (H3) 헤딩을 분할점으로 사용
+- 최상위 헤딩(H1)이 있으면 H1 기준으로 분할 우선
+- H1이 없으면 H2, H2도 없으면 H3 기준
+- 헤딩이 전혀 없으면 빈 줄 2개 이상 연속되는 지점을 분할점으로 사용
+
+**Plain Text (`.txt`):**
+- 빈 줄이 2개 이상 연속되는 지점을 분할점으로 우선 사용
+- `1.`, `2.`, `1장`, `제1장`, `Chapter 1` 등 번호 패턴이 있으면 그 지점을 분할점으로 사용
+- 분할점이 없으면 500줄 단위로 강제 분할 (단어 중간 끊김 방지: 해당 줄 끝까지 포함)
+
+**설교 원고:**
+- `서론`, `들어가며`, `Introduction` → 분할점
+- `본론`, `본문`, `Body`, `1. `, `첫째`, `둘째`, `셋째` → 분할점
+- `결론`, `나가며`, `Conclusion`, `맺음말` → 분할점
+- `적용`, `Application`, `결단` → 분할점
+
+**책 원고:**
+- `제1장`, `1장`, `Chapter 1`, `CHAPTER ONE` 등 챕터 마커 → 분할점
+- `제1절`, `1절`, `Section 1` 등 절 마커 (챕터 마커가 없을 때) → 분할점
+- 목차(Table of Contents) 발견 시: 목차에서 챕터 위치를 먼저 파악하고 해당 위치를 분할점으로 사용
+
+### 분할 구현 (Read offset/limit 활용)
+
+```
+1. 전체 파일 구조 스캔:
+   - Read(file, limit=100)으로 서두 읽어 형식 및 헤딩 구조 파악
+   - 분할점 후보 행 번호 목록 수집 (줄 단위 wc -l 결과 활용)
+
+2. 분할점 목록 생성:
+   - 자연 분할점이 500줄 간격보다 조밀하면: 주요 분할점만 선택 (각 파트 200-500줄 범위)
+   - 자연 분할점이 없거나 500줄 초과 간격이면: 500줄 단위 강제 분할
+
+3. 파트별 읽기 및 저장:
+   for each (start_line, end_line) in parts:
+       content = Read(file, offset=start_line, limit=end_line - start_line)
+       → 개별 raw entry로 저장 (새 source_id 부여)
+```
+
+### 부모-자식 entry 관계
+
+**원본 파일(부모):** 분할된 경우에도 원본 전체를 별도 entry로 보관한다.
+
+원본 entry 프론트매터 추가 필드:
+```yaml
+is_parent: true        # 이 entry가 분할의 원본임을 표시
+total_parts: 10        # 분할된 파트 총 수
+absorbed: false        # 원본 자체는 absorb 대상에서 제외 (파트들만 처리)
+```
+
+**파트 entry(자식):** 각 분할 파트에 추가 필드:
+```yaml
+parent_source_id: src_20260422_001   # 원본 entry의 source_id
+part: 3                               # 이 entry가 몇 번째 파트인지 (1부터 시작)
+total_parts: 10                       # 전체 파트 수
+part_title: "3장: 은혜의 본질"        # 이 파트의 제목 (감지된 경우)
+```
+
+### 분할 처리 후 수집 리포트 추가 항목
+
+분할이 발생하면 수집 리포트에 다음을 추가한다:
+
+```
+분할 처리된 대용량 파일:
+  - {파일명} ({전체 줄 수}줄) → {N}개 파트로 분할
+    파트 1: {제목 또는 "파트 1"} ({줄 범위})
+    파트 2: {제목 또는 "파트 2"} ({줄 범위})
+    ...
+```
+
+---
+
 ## 참조
 
 - 스펙: `docs/specs/2026-04-21-publish-agent-design.md` — 섹션 4.2 (raw entry 포맷), 섹션 8 (지원 형식 + 에러 처리)
 - 워크스페이스 구조: `shared/references/workspace-schema.md`
+- 컨텍스트 관리: `shared/references/context-management.md`

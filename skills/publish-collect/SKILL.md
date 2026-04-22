@@ -163,6 +163,46 @@ batch_{YYYYMMDD}
   ```
 - **일치하는 해시 없음:** 새 항목으로 저장 진행
 
+### Step 3.5: 대용량 파일 분할
+
+파일 줄 수가 500줄을 초과하면 단일 entry로 저장하지 않고 분할 처리한다.
+
+```
+파일 줄 수 확인
+  ↓
+500줄 이하 → 단일 entry로 저장 (기존 흐름)
+  ↓
+500줄 이상 → 분할 처리:
+  1. 파일 구조 스캔 (헤딩, 빈 줄 블록, 챕터 구분)
+  2. 자연 분할점 기준으로 파트 분리
+  3. 각 파트를 개별 entry로 저장
+  4. 프론트매터에 parent_source_id, part, total_parts 추가
+  5. 원본 전체 파일도 raw/entries/에 보관 (absorbed: false, is_parent: true)
+```
+
+**분할 기준 (형식별 자연 분할점):**
+
+| 형식 | 분할점 |
+|------|--------|
+| Markdown | 헤딩 레벨 (# ## ###) |
+| Plain text | 빈 줄 블록, 번호 매긴 섹션 |
+| 설교 원고 | 서론/본론/결론/적용 마커 |
+| 책 원고 | 장/절/챕터 마커 |
+
+**분할 크기 기준:**
+
+| 파일 크기 | 처리 방식 |
+|----------|----------|
+| 500줄 이하 | 그대로 단일 entry |
+| 500-2000줄 | 자연 구분점 기준 2-5개 entry로 분할 |
+| 2000줄 이상 | 반드시 분할, 각 파트 최대 500줄 |
+
+Read 도구의 `offset`/`limit` 파라미터를 사용하여 청크 단위로 읽는다. 전체 파일을 한 번에 읽지 않는다.
+
+→ 상세 규칙: `publish-collect/references/format-handling.md`의 "대용량 파일 분할 처리" 섹션 참조
+
+---
+
 #### ⑥ raw entry 저장
 
 **파일명 규칙:**
@@ -196,6 +236,10 @@ content_hash: "sha256:{해시값}"
 tags: []
 absorbed: false
 deleted: false
+parent_source_id: ""    # 분할된 경우 원본 파일의 source_id, 분할 안 된 경우 빈 문자열
+part: 0                 # 파트 번호 (0 = 분할 안 됨)
+total_parts: 0          # 전체 파트 수 (0 = 분할 안 됨)
+part_title: ""          # 파트 제목 (있으면)
 ---
 ```
 
@@ -325,5 +369,6 @@ deleted: false
 
 ## 참조 문서
 
-- `publish-collect/references/format-handling.md` — 파일 형식별 변환 규칙 + 인코딩 처리 + 에러 처리 상세
+- `publish-collect/references/format-handling.md` — 파일 형식별 변환 규칙 + 인코딩 처리 + 에러 처리 상세 + 대용량 파일 분할 처리
 - `shared/references/workspace-schema.md` — raw entry 프론트매터 스키마 + 워크스페이스 구조
+- `shared/references/context-management.md` — 컨텍스트 윈도우 관리 전략 + 토큰 예산

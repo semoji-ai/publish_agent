@@ -121,6 +121,14 @@ batch_{YYYYMMDD}_{순번}
 
 `batch_size`건씩 반복 처리한다. 각 배치가 끝날 때마다 체크포인트를 기록한다.
 
+**컨텍스트 관리 원칙 (필수):**
+- 각 entry를 처리할 때 해당 entry의 본문을 **한 번에 500줄 이하**로만 읽는다. 500줄을 초과하는 entry는 collect 단계에서 이미 분할되어 있어야 하지만, 예외적으로 큰 entry가 있으면 Read의 `offset`/`limit`으로 청크 단위 처리한다.
+- 기존 위키 기사를 확인할 때는 **summary 필드(Level 1)를 먼저** 읽는다. 병합 여부 판단에 필요한 경우에만 해당 chunks/를 선택적으로 로드한다. 기사 전체를 한 번에 읽지 않는다.
+- 한 배치 처리 중 컨텍스트에 누적되는 원문 텍스트가 3000줄을 넘으면 즉시 체크포인트를 기록하고 배치를 분할한다.
+- 토큰 예산: 항목당 읽기 30K + 처리 20K + 출력 10K = 60K. 이를 초과하면 분할 처리로 전환.
+
+→ 상세 규칙: `shared/references/context-management.md`의 "absorb 단계 대용량 처리" 섹션 참조
+
 #### 2a: 항목 분석 — "이것이 무엇을 의미하는가?"
 
 각 항목에 대해 `publish-absorb/references/absorb-prompt.md`의 항목 분석 프롬프트를 적용한다.
@@ -349,4 +357,5 @@ chunk_count: {청크 수, 없으면 0}
 - `shared/references/wiki-article-format.md` — 2-tier 기사 포맷 + 위키링크 규칙
 - `shared/references/absorb-rules.md` — 흡수 매칭/분리/병합 로직 상세
 - `shared/references/search-strategy.md` — 계층적 요약 검색 전략
+- `shared/references/context-management.md` — 컨텍스트 윈도우 관리 전략 + 토큰 예산
 - `publish-absorb/references/absorb-prompt.md` — 흡수용 LLM 프롬프트 템플릿

@@ -50,11 +50,37 @@ description: Use when users say "/publish-profile", "내 문체 분석해줘", "
 - **전체 분석 (기본):** `wiki/` 전체 기사 + `raw/entries/`의 primary 원본
 - **특정 자료 지정:** 사용자가 경로나 자료 유형을 지정한 경우 해당 범위만
 
-**샘플링 전략:**
-1. `wiki/sermons/_index.md`, `wiki/books/_index.md`, `wiki/concepts/_index.md` 스캔
-2. 각 카테고리별 대표 기사 인덱스(`index.md`) 로드 (카테고리당 최대 10건)
-3. `raw/entries/` 스캔 → `type: primary`이고 `deleted: false`인 항목 추출
-4. primary 원본 중 최대 20건 샘플 로드 (날짜 분산 샘플링)
+**샘플링 전략 (컨텍스트 보호 필수):**
+
+모든 1차 자료를 한 번에 읽지 않는다. 다음 샘플링 방식으로 대표 자료만 추출한다:
+
+```
+전체 corpus 목록 파악 (raw/entries/ 스캔, 파일명만 — 본문 읽지 않음)
+  ↓
+샘플 선택:
+  - 최근 10편 (ingested_at 기준 최신)
+  - 초기 5편 (ingested_at 기준 가장 오래된 것)
+  - 무작위 5편 (전체에서 균등 분산)
+  = 최대 20편 샘플
+  ↓
+각 샘플에서 부분 추출 (Read offset/limit 활용):
+  - 서론: 처음 50줄
+  - 본론 일부: 중간 100줄 (전체 줄 수의 1/3 지점부터)
+  - 결론: 마지막 50줄
+  = 파일당 최대 200줄 추출
+  ↓
+총 최대 4000줄 → 슬라이딩 윈도우로 8청크 분할 처리
+(청크당 500줄, 처리 후 원문 버리고 요약만 누적)
+```
+
+**wiki 기사 샘플링:**
+1. `wiki/sermons/_index.md`, `wiki/books/_index.md`, `wiki/concepts/_index.md` 스캔 (Level 0)
+2. 각 카테고리별 대표 기사의 summary만 로드 (Level 1, 카테고리당 최대 10건)
+3. 기사 전체(chunks/)는 로드하지 않음 — summary가 분석에 충분
+
+**토큰 예산:** 읽기 40K + 처리 30K + 출력 10K = 80K.
+
+→ 상세 규칙: `shared/references/context-management.md`의 "패턴 3: 샘플링" 섹션 참조
 
 **주의:** `type: reference`인 2차 자료는 분석 대상에서 제외한다. 저자 본인의 글(primary)만 분석한다.
 
@@ -286,4 +312,5 @@ audience_address: ""
 - `shared/references/author-profile-schema.md` — 저자 프로필 4파일 스키마 전체
 - `shared/references/workspace-schema.md` — 워크스페이스 구조 + config.yaml 스키마
 - `shared/references/search-strategy.md` — wiki/ 계층 검색 전략
+- `shared/references/context-management.md` — 컨텍스트 윈도우 관리 전략 + 샘플링 패턴
 - `publish-profile/references/analysis-dimensions.md` — 4차원 분석 상세 기준
