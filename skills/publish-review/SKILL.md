@@ -202,10 +202,21 @@ reviews/{YYYYMMDD}_review_r{N}_unresolved.md에 미해결 이슈 목록을 저�
 
 ---
 
+## 커스텀 심사 기준
+
+`publish-review/references/custom-rubric.md` 파일이 존재하면 **공통 rubric보다 우선 적용**한다.
+없으면 `review-rubric.md`를 기본으로 사용한다.
+
+커스텀 rubric에는 특정 사용자/교회에 맞는 심사 기준을 정의할 수 있다:
+- 특정 차원의 가중치 조정 (예: "적용" 비중 강화)
+- 추가 심사 차원 (예: "교회 비전과의 정합성")
+- 등급 기준 변경
+
 ## 참조 문서
 
 - `shared/references/author-profile-schema.md` — 저자 프로필 4파일 스키마
 - `shared/references/search-strategy.md` — wiki/ 계층적 검색 전략
 - `shared/references/workspace-schema.md` — 워크스페이스 구조 + 스키마
 - `shared/references/context-management.md` — 컨텍스트 윈도우 관리 전략 + 섹션 분할 심사 규칙
-- `publish-review/references/review-rubric.md` — 4차원 심사 기준표 + 리포트 템플릿
+- `publish-review/references/review-rubric.md` — 4차원 심사 기준표 (공통)
+- `publish-review/references/custom-rubric.md` — 사용자별 심사 기준 (있으면 우선 적용)

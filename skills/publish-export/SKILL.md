@@ -7,6 +7,15 @@ description: Use when users say "/publish-export", "PDF로 만들어줘", "출�
 
 프로젝트의 마크다운 초안을 pandoc으로 DOCX, PDF, ePub으로 변환하여 출판 가능한 파일을 생성한다.
 
+## 커스텀 export 템플릿
+
+`publish-export/templates/` 디렉토리에 사용자별 템플릿 파일을 배치할 수 있다:
+- `church-letterhead.yaml` — 교회 로고/서식 정보
+- `custom-style.css` — ePub 커스텀 스타일
+- `custom-template.tex` — PDF LaTeX 템플릿
+
+템플릿 파일이 있으면 pandoc 변환 시 자동 적용한다. 없으면 pandoc 기본 템플릿 사용.
+
 ## 트리거 조건
 
 ```

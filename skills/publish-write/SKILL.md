@@ -258,10 +258,19 @@ wiki 참조 기사: {K}개
 
 ---
 
+## 커스텀 집필 모드
+
+`publish-write/references/custom-modes.md` 파일이 존재하면 **공통 writing-modes에 추가**로 적용한다.
+커스텀 모드에는 특정 사용자/교회에 맞는 집필 유형을 정의할 수 있다:
+- 주보 칼럼 모드
+- 교회 뉴스레터 모드
+- 특정 시리즈물 템플릿
+
 ## 참조 문서
 
 - `shared/references/search-strategy.md` — wiki/ 계층적 요약 검색 전략
 - `shared/references/workspace-schema.md` — project.yaml 스키마 + 워크스페이스 구조
 - `shared/references/author-profile-schema.md` — 저자 프로필 4파일 스키마
 - `shared/references/context-management.md` — 컨텍스트 윈도우 관리 전략 + 챕터별 토큰 예산
-- `publish-write/references/writing-modes.md` — 프로젝트 유형별 상세 가이드
+- `publish-write/references/writing-modes.md` — 프로젝트 유형별 상세 가이드 (공통)
+- `publish-write/references/custom-modes.md` — 사용자별 추가 집필 모드 (있으면 추가 적용)
