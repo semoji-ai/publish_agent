@@ -34,6 +34,8 @@ KB는 두 영역으로 구성된다: **wiki/** (지식 기사)와 **authors/** (
                         ↓
 /publish-profile  → authors/ (저자 프로필)
                         ↓
+/publish-plan     → plans/ (기획안)
+                        ↓
               ┌─────────┼─────────┐
               ↓         ↓         ↓
       /publish-write  /publish-sermon  /publish-curate
@@ -51,7 +53,7 @@ KB는 두 영역으로 구성된다: **wiki/** (지식 기사)와 **authors/** (
 
 ## 2. 스킬 구성
 
-총 9개 스킬. 온보딩(Phase 1)에서는 대화형 가이드가 순서대로 스킬을 안내하고, 일상 사용(Phase 2)에서는 LLM이 대화 맥락에서 적절한 스킬을 자동 호출한다. 사용자가 슬래시 명령어를 암기할 필요 없다.
+총 10개 스킬. 온보딩(Phase 1)에서는 대화형 가이드가 순서대로 스킬을 안내하고, 일상 사용(Phase 2)에서는 LLM이 대화 맥락에서 적절한 스킬을 자동 호출한다. 사용자가 슬래시 명령어를 암기할 필요 없다.
 
 | # | 스킬 | 역할 | KB 관계 |
 |---|------|------|---------|
@@ -59,11 +61,12 @@ KB는 두 영역으로 구성된다: **wiki/** (지식 기사)와 **authors/** (
 | 1 | `/publish-collect` | 로컬/웹 자료 수집 (1차·2차 자료) | raw 쓰기 |
 | 2 | `/publish-absorb` | raw entries → 위키 기사 흡수 | KB 쓰기 |
 | 3 | `/publish-profile` | 저자 프로필 분석/갱신 | KB 읽기+쓰기 |
-| 4 | `/publish-write` | KB + 프로필 기반 집필 (신규/개정) | KB 읽기 |
-| 5 | `/publish-review` | KB + 프로필 기반 교정/심사 | KB 읽기 |
-| 6 | `/publish-curate` | KB 검수/오염 제거/롤백 | KB 읽기+쓰기 |
-| 7 | `/publish-export` | Markdown → DOCX/PDF/ePub 변환 | 읽기만 |
-| 8 | `/publish-sermon` | 설교 준비용 KB 조회 | KB 읽기 |
+| 4 | `/publish-plan` | 소크라테스 인터뷰 기반 기획 | KB 읽기 |
+| 5 | `/publish-write` | KB + 프로필 기반 집필 (신규/개정) | KB 읽기 |
+| 6 | `/publish-review` | KB + 프로필 기반 교정/심사 | KB 읽기 |
+| 7 | `/publish-curate` | KB 검수/오염 제거/롤백 | KB 읽기+쓰기 |
+| 8 | `/publish-export` | Markdown → DOCX/PDF/ePub 변환 | 읽기만 |
+| 9 | `/publish-sermon` | 설교 준비용 KB 조회 | KB 읽기 |
 
 ---
 
