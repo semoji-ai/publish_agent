@@ -30,7 +30,7 @@ description: Use when users say "/publish-write", "책 써줘", "초안 작성�
 
 1. **config.yaml 존재** — 워크스페이스가 초기화된 상태 (`/publish-setup` 완료)
 2. **저자 프로필 존재** — `authors/{author_id}/` 아래 4개 파일에 내용이 채워진 상태 (`/publish-profile` 완료)
-3. **wiki/ 에 기사 존재** — `wiki/_index.md`에 기사가 1개 이상 등록된 상태 (`/publish-absorb` 완료)
+3. **프로젝트 존재** — `projects/` 에 확정된 프로젝트가 1개 이상 존재 (`/publish-plan` finalize 완료)
 
 사전 조건 미충족 시: 어느 단계가 누락되었는지 안내하고 해당 스킬을 먼저 실행하도록 안내한다.
 
@@ -38,62 +38,24 @@ description: Use when users say "/publish-write", "책 써줘", "초안 작성�
 
 ## WHEN TRIGGERED - EXECUTE IMMEDIATELY
 
-### Step 1: 프로젝트 유형 및 목차 확인
+### Step 1: 프로젝트 선택
 
-사용자로부터 다음을 파악한다. 이미 대화에서 언급된 경우 재질문 없이 진행한다.
+config.yaml을 로드하여 워크스페이스 경로를 확인한 뒤, `projects/` 디렉토리를 스캔한다.
 
-**필수:**
-- 프로젝트 유형: `new_book` / `revision` / `sermon_collection` / `commentary`
-- 프로젝트 이름 (디렉토리명으로 사용, 예: `로마서_강해`, `은혜론_개정판`)
+**프로젝트가 있는 경우:**
+- 프로젝트 목록을 표시 (project.yaml의 name, type, status 읽기)
+- 사용자가 선택하거나, 이미 대화에서 특정 프로젝트를 언급한 경우 해당 프로젝트 선택
 
-**유형별 추가 정보:**
+**프로젝트가 없는 경우:**
+- "/publish-plan을 먼저 실행하여 기획을 완성한 후 집필을 시작하세요." 안내
+- 스킬 종료
 
-| 유형 | 추가로 필요한 정보 |
-|------|-------------------|
-| new_book | 주제 + 목차 (사용자 제공 또는 KB 기반 자동 제안) |
-| revision | 원본 파일 경로 (`base_document`) |
-| sermon_collection | 포함할 설교 범위 (전체 / 특정 주제 / 특정 기간) |
-| commentary | 성경 본문 범위 (예: 로마서 1-8장) |
+**선택된 프로젝트 로드:**
+1. project.yaml 로드 — outline, type, wiki_queries, summary, flow_type 확인
+2. proposal.md 로드 (있으면, ~1-2K 토큰) — 기획 의도·독자·메시지 맥락 참조
+3. proposal.md는 집필 시 전체 방향을 상기하는 용도. 챕터 작업 중 토큰 부족 시 요약만 유지
 
-유형별 상세 가이드: `publish-write/references/writing-modes.md` 참조.
-
-### Step 2: 프로젝트 초기화
-
-`projects/{project_name}/` 디렉토리를 생성하고 `project.yaml`을 작성한다.
-
-**project.yaml 스키마:**
-
-```yaml
-name: "{프로젝트 이름}"
-type: new_book | revision | sermon_collection | commentary
-author_id: "{config.yaml의 author.id}"
-created: {오늘 날짜 YYYY-MM-DD}
-status: drafting
-
-outline:
-  - title: "{챕터/섹션 제목}"
-    slug: "{ch번호(2자리 0패딩)_{제목 sanitized}}"  # 자동 생성
-    draft_file: "{slug}.md"                          # 자동 생성
-    status: pending
-  # 챕터별로 반복
-
-base_document: ""          # revision 모드일 경우 원본 경로
-wiki_queries:              # 이 프로젝트에서 참조할 주요 토픽
-  - "{주제 키워드 1}"
-  - "{주제 키워드 2}"
-```
-
-**디렉토리 구조:**
-
-```
-projects/{project_name}/
-├── project.yaml
-├── drafts/        # 챕터별 초안 저장
-├── reviews/       # /publish-review 심사 리포트
-└── exports/       # /publish-export 최종 출력물
-```
-
-### Step 3: 저자 프로필 로드
+### Step 2: 저자 프로필 로드
 
 집필 전 저자 프로필 4개 파일을 모두 로드한다. 이 프로필이 집필 전 과정에서 문체·관점의 기준이 된다.
 
@@ -106,7 +68,7 @@ authors/{author_id}/vocabulary.md       — 자주 쓰는/피하는 표현
 
 프로필 4파일은 합산 ~2K 토큰으로, 세션 전체에서 컨텍스트에 항상 유지한다. 챕터 교체 시에도 프로필은 제거하지 않는다.
 
-### Step 4: 챕터별 초안 작성
+### Step 3: 챕터별 초안 작성
 
 **컨텍스트 관리 원칙 (필수):**
 - **한 번에 1챕터만 작업한다.** 이전 챕터의 전체 원문은 파일로 저장한 뒤 컨텍스트에서 제거한다. 이전 챕터 요약(5-10줄)만 유지하여 연결성을 보장한다.
@@ -119,7 +81,7 @@ authors/{author_id}/vocabulary.md       — 자주 쓰는/피하는 표현
 
 각 챕터에 대해 다음 순서로 진행한다:
 
-#### 4a: wiki/ 계층 검색
+#### 3a: wiki/ 계층 검색
 
 `shared/references/search-strategy.md`의 검색 전략을 따른다:
 
@@ -143,11 +105,11 @@ Level 2: 선별된 기사의 chunks/ 로드
 | sermon_collection | sermons/ | concepts/, passages/ |
 | commentary | passages/ | concepts/, references/ |
 
-#### 4b: 관련 자료 로드
+#### 3b: 관련 자료 로드
 
 검색으로 선별된 자료를 로드한다. 토큰 예산을 고려하여 **가장 관련성 높은 기사 3-5개**를 우선 로드한다. Level 1(summary)에서 충분하면 Level 2(chunks) 로드 금지. 전체 wiki 기사 로드 총량은 20K 토큰을 초과하지 않는다.
 
-#### 4c: 프로필 기반 초안 작성
+#### 3c: 프로필 기반 초안 작성
 
 로드한 KB 자료와 저자 프로필을 바탕으로 챕터 초안을 작성한다.
 
@@ -159,9 +121,9 @@ Level 2: 선별된 기사의 chunks/ 로드
 - **어휘:** vocabulary.md의 자주 쓰는 표현 적극 활용, 피하는 표현 배제
 - **설교/강해 구조:** sermon_pattern.yaml 참조 (sermon_collection, commentary)
 
-**개정판 모드(revision):** Step 6 참조.
+**개정판 모드(revision):** Step 5 참조.
 
-### Step 5: 자기 검증
+### Step 4: 자기 검증
 
 각 챕터 초안 완료 후, 다음 체크리스트로 저자 프로필 대비 일관성을 검증한다.
 
@@ -176,9 +138,9 @@ Level 2: 선별된 기사의 chunks/ 로드
 
 불일치 발견 시: 해당 부분을 수정하여 프로필과 일치시킨 후 저장한다.
 
-### Step 6: 개정판 모드 (revision)
+### Step 5: 개정판 모드 (revision)
 
-`type: revision`인 경우 Step 4 대신 다음 절차를 따른다.
+`type: revision`인 경우 Step 3 대신 다음 절차를 따른다.
 
 ```
 원본 문서 로드 (project.yaml의 base_document 경로)
@@ -195,9 +157,9 @@ Level 2: 선별된 기사의 chunks/ 로드
 전체 섹션 완료 후 완료 리포트
 ```
 
-개정판 모드에서도 Step 5 자기 검증을 각 섹션마다 적용한다.
+개정판 모드에서도 Step 4 자기 검증을 각 섹션마다 적용한다.
 
-### Step 7: 초안 저장 및 완료 리포트
+### Step 6: 초안 저장 및 완료 리포트
 
 **챕터 완료 시 컨텍스트 정리:**
 
@@ -274,3 +236,4 @@ wiki 참조 기사: {K}개
 - `shared/references/context-management.md` — 컨텍스트 윈도우 관리 전략 + 챕터별 토큰 예산
 - `publish-write/references/writing-modes.md` — 프로젝트 유형별 상세 가이드 (공통)
 - `publish-write/references/custom-modes.md` — 사용자별 추가 집필 모드 (있으면 추가 적용)
+- proposal.md (프로젝트 디렉토리 내) — 기획 의도·독자·메시지 맥락 (집필 방향 참조용)
