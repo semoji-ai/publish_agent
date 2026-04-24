@@ -68,18 +68,12 @@ Level 2: chunks/ 상세 내용 → 실제 집필 참조 (필요한 것만)
 
 ### 집필 절차
 
-#### 1단계: 목차 확정
+#### 1단계: 프로젝트 확인
 
-**사용자가 목차를 제공하는 경우:**
-- 제공된 목차를 `project.yaml`의 `outline`에 그대로 기록
-- wiki_queries에 각 챕터의 핵심 키워드 추출하여 추가
-
-**목차가 없는 경우 (KB 기반 자동 제안):**
-1. `wiki/concepts/_index.md` 스캔 → 주제와 관련된 기사 목록 파악
-2. `wiki/sermons/_index.md` 스캔 → 저자가 자주 다룬 주제 파악
-3. 관련 기사들의 `summary` 필드 검토 → 주제 클러스터 식별
-4. 클러스터를 바탕으로 목차 초안 제안 → 사용자 확인 및 조정
-5. 확정된 목차를 `project.yaml`에 저장
+project.yaml의 outline을 확인한다. `/publish-plan`에서 이미 목차가 확정된 상태이므로:
+- outline의 각 챕터 제목과 core_argument 확인
+- proposal.md에서 기획 의도, 독자, 핵심 메시지 확인
+- wiki_queries에서 참조 토픽 확인
 
 #### 2단계: 챕터별 순차 작성
 
