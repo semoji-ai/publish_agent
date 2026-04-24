@@ -122,6 +122,7 @@ description: Use when users say "/publish-setup", "워크스페이스 만들어�
 │   └── references/
 ├── raw/
 │   └── entries/
+├── plans/
 ├── projects/
 ├── snapshots/
 └── logs/
