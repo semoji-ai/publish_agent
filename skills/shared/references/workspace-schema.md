@@ -55,6 +55,11 @@ description: Publish Agent 워크스페이스 구조 및 전체 YAML/JSON 스키
 ├── raw/
 │   └── entries/                    # 수집된 원본 자료 (정제된 마크다운, YAML 프론트매터 포함)
 │       └── {YYYYMMDD}_{source_id}.md   # 파일명 형식: 날짜_소스ID
+├── plans/                         # 기획안 저장소 (/publish-plan이 관리)
+│   └── plan_{id}/                 # 기획안별 디렉토리 (id: 사용자 지정)
+│       ├── plan.yaml              # 기획 상태 + 구조화 데이터 (스키마 → 4.8)
+│       ├── proposal.md            # 기획서 문서 (사람용, 인터뷰 진행 시 자동 갱신)
+│       └── interview_log.md       # 소크라테스 인터뷰 누적 기록
 ├── projects/                       # 집필 프로젝트
 │   └── {project_name}/
 │       ├── project.yaml            # 프로젝트 설정 (스키마 → 4.6)
@@ -226,6 +231,14 @@ wiki_queries:                   # 이 프로젝트에서 참조할 주요 위키
   - "칭의"
   - "율법과 복음"
   - "바울 신학"
+plan_id: ""                         # 원본 기획안 ID (plans/plan_{id}/ 참조). 기획 없이 생성된 경우 빈 문자열
+summary:                            # publish-plan에서 생성된 기획 요약 (finalize 시 자동 생성)
+  motivation: ""                    # 왜 이 책을 쓰는가
+  core_question: ""                 # 이 책이 답하려는 질문
+  audience: ""                      # 주 독자층 + 독자가 얻어갈 것
+  thesis: ""                        # 핵심 주장/메시지
+  key_themes: []                    # 핵심 주제 목록
+flow_type: ""                       # 논리 전개 방식 (연역/귀납/내러티브 등)
 ```
 
 **slug 생성 규칙:**
@@ -245,6 +258,11 @@ wiki_queries:                   # 이 프로젝트에서 참조할 주요 위키
 - `commentary`: 강해서 작성 (성경 본문 단위, wiki/passages/ 기반)
 
 **outline.status 흐름:** `pending` → `drafting` → `draft` → `review` → `done`
+
+**plan 연동 필드:**
+- `plan_id`: publish-plan의 finalize로 생성된 경우 원본 기획안 ID. 기획 없이 생성된 기존 프로젝트는 빈 문자열. 하위 호환.
+- `summary`: 기획 요약. publish-plan finalize 시 concept + audience + message에서 자동 생성. 없으면 빈 값으로 취급.
+- `flow_type`: 기획에서 결정된 논리 전개 방식. 없으면 빈 문자열.
 
 ---
 
@@ -330,3 +348,70 @@ part_title: ""                    # 이 파트의 제목 (감지된 경우)
 - `part` / `total_parts`: 분할된 경우 파트 순번과 총 파트 수를 기록한다. 분할 안 된 경우 모두 0.
 - `part_title`: 분할점에서 감지된 챕터/섹션 제목. 없으면 빈 문자열.
 - absorb 스킬은 `parent_source_id`가 비어 있지 않은 entry를 처리할 때 관련 파트들을 함께 고려하여 위키 기사를 구성할 수 있다.
+
+---
+
+## 4.8 plan.yaml 스키마
+
+`plans/plan_{id}/plan.yaml`에 위치. `/publish-plan` 스킬이 생성·관리한다.
+
+```yaml
+id: "은혜론_2026"
+title: "무조건적 은혜 - 은혜의 재발견"
+type: new_book                      # new_book / revision / sermon_collection / commentary
+author_id: "pastor_kim"
+created: 2026-04-24
+updated: 2026-04-24
+status: concept                     # concept / audience / message / structure / detail / finalized
+
+# 소크라테스 인터뷰 진행 상태
+interview:
+  current_phase: concept            # concept / audience / message / structure / detail
+  completed_phases: []
+  next_question_context: ""         # 재개 시 LLM이 참조할 맥락 요약
+
+# 기획 내용 (인터뷰 진행에 따라 점진적으로 채워짐)
+concept:
+  motivation: ""                    # 왜 이 책을 쓰는가
+  core_question: ""                 # 이 책이 답하려는 질문
+  working_title: ""                 # 가제
+
+audience:
+  primary: ""                       # 주 독자층
+  prior_knowledge: ""               # 독자의 사전 지식 수준
+  reader_outcome: ""                # 독자가 얻어갈 것
+
+message:
+  thesis: ""                        # 핵심 주장/메시지
+  key_themes: []                    # 핵심 주제 목록
+  theological_stance: ""            # 신학적 방향 (theology.yaml 기반)
+
+structure:
+  total_chapters: 0
+  estimated_length: ""              # 예상 총 분량
+  flow_type: ""                     # 논리 전개 방식 (연역/귀납/내러티브 등)
+
+outline:                            # 챕터별 상세 (유형에 따라 깊이 다름)
+  - chapter: 1
+    title: ""
+    core_argument: ""               # 핵심 논지
+    sections: []                    # new_book: 섹션 구조 / sermon_collection: 빈칸
+    kb_sources: []                  # 참조할 wiki 기사
+    estimated_length: ""
+    notes: ""                       # 인터뷰 중 나온 메모
+
+# 기획 확정 시 project 변환 정보
+finalized:
+  project_name: ""                  # projects/{name}으로 변환될 이름
+  finalized_date: ""
+```
+
+**status 흐름:** `concept` → `audience` → `message` → `structure` → `detail` → `finalized`
+
+- `status`는 `interview.current_phase`와 동기화된다. phase가 전환되면 status도 함께 변경.
+- finalize 실행 시 `status: finalized`로 변경되며 project로 변환 가능.
+
+**plan_id 규칙:**
+- 사용자가 지정하는 짧은 식별자 (예: `은혜론_2026`, `로마서강해`)
+- 디렉토리명: `plans/plan_{id}/`
+- sanitize: 공백 → `_`, 특수문자 제거, 한글·영문·숫자·언더스코어만 허용
