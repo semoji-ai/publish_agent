@@ -84,6 +84,7 @@ skills/
 | `/publish-collect` | 로컬/웹 자료 수집 (1차·2차 자료) |
 | `/publish-absorb` | raw entries → 위키 기사 흡수 (LLM Wiki 패턴) |
 | `/publish-profile` | 저자 프로필 분석/갱신 (문체·신학·설교구조·어휘) |
+| `/publish-plan` | 소크라테스 인터뷰 기반 기획 (컨셉·독자·메시지·구조·상세) |
 | `/publish-write` | KB + 프로필 기반 집필 (신규/개정/설교집/강해서) |
 | `/publish-review` | KB + 프로필 기반 교정/심사 (4차원 루브릭) |
 | `/publish-curate` | KB 검수/오염 제거/롤백 |
@@ -129,7 +130,7 @@ xelatex --version   # PDF export용 (선택)
 
 ### 일상 사용
 자연어로 대화하면 LLM이 적절한 스킬을 자동 호출합니다.
-- "새 책 써줘" → write → review → export
+- "새 책 기획해줘" → plan → write → review → export
 - "설교 준비 도와줘" → sermon
 - "새 자료 추가해줘" → collect → absorb
 
