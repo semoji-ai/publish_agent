@@ -1,0 +1,13 @@
+{
+  "bands": {
+    "sent_p50": [4, 9],
+    "ending_family_share": [0.4, 0.95],
+    "question_per_1k": [0, 2],
+    "exclam_per_1k": [0, 2]
+  },
+  "must_zero": ["결론부터 말씀드리면"],
+  "signatures": [
+    {"expr": "사랑하는 성도 여러분", "min_per_doc": 1}
+  ],
+  "ai_tells": ["오늘의 핵심은"]
+}
