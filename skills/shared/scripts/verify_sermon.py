@@ -12,7 +12,10 @@ literal 종결 패턴으로 오인하지 않도록 이름을 family로 명시한
 (family = {습니다, ㅂ니다})
 
 CLI:
-    python3 scripts/verify_sermon.py <draft.md> --fingerprint fp.json --rules rules.json [--json]
+    python3 "{skill_root}/shared/scripts/verify_sermon.py" <draft.md> --fingerprint fp.json --rules rules.json
+
+    {skill_root} = 이 스킬이 설치된 디렉토리 (일반적으로 ~/.claude/skills/publish-agent;
+    리포에서 직접 쓸 때는 <repo>/skills). Windows에서는 python3 대신 py -3 사용.
 
 모듈:
     verify(draft_text: str, fp: dict, rules: dict) -> dict
@@ -164,7 +167,6 @@ def main(argv=None):
     parser.add_argument("draft", help="Path to draft .md/.txt file")
     parser.add_argument("--fingerprint", required=True, help="Path to fingerprint JSON")
     parser.add_argument("--rules", required=True, help="Path to rules.json")
-    parser.add_argument("--json", action="store_true", help="Force JSON output (default)")
     args = parser.parse_args(argv)
 
     draft_text = Path(args.draft).read_text(encoding="utf-8")

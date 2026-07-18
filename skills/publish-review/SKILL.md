@@ -47,12 +47,14 @@ KB(wiki/)와 저자 프로필(authors/)을 기준으로 초안을 심사하고 �
 초안(설교집/강해서/설교문)이면, rubric 심사(Step 4)보다 **먼저** 기계
 게이트를 확인한다.
 
-- 게이트가 아직 실행되지 않았으면 직접 실행한다:
+- 게이트가 아직 실행되지 않았으면 직접 실행한다 (워크스페이스에서 실행):
   ```
-  python3 scripts/verify_sermon.py <초안 파일> \
+  python3 "{skill_root}/shared/scripts/verify_sermon.py" <초안 파일> \
     --fingerprint authors/{author_id}/sermon-fingerprint.json \
     --rules authors/{author_id}/sermon-rules.json
   ```
+  `{skill_root}` = 이 스킬이 설치된 디렉토리 (일반적으로 `~/.claude/skills/publish-agent`;
+  리포에서 직접 쓸 때는 `<repo>/skills`). Windows에서는 `python3` 대신 `py -3` 사용.
 - `ok:false`이면 위반 목록을 사용자에게 먼저 보고하고, rubric 심사는 게이트
   통과본(재작성 후 재실행하여 ok:true가 된 버전)에 대해서만 수행한다.
   사용자가 게이트 미통과 상태로도 rubric 심사를 강행하길 원하면 그 요청을

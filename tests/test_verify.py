@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "skills" / "shared" / "scripts"))
 
 from sermon_fingerprint import fingerprint, load_corpus  # noqa: E402
 from verify_sermon import DEFAULT_AI_TELLS, verify  # noqa: E402

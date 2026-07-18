@@ -1,6 +1,6 @@
 # 설교 팩 스키마 (sermon-pack.md + sermon-rules.json)
 
-`/publish-profile`이 `scripts/sermon_fingerprint.py`의 실측 JSON을 근거로
+`/publish-profile`이 `{skill_root}/shared/scripts/sermon_fingerprint.py`의 실측 JSON을 근거로
 `authors/{author_id}/sermon-pack.md`와 `authors/{author_id}/sermon-rules.json`을
 생성할 때 따르는 스키마다. gn-voice 팩 해부 구조(레지스터·시그니처·리듬·구조
 관습·대조페어·Do-NOT)를 설교 도메인으로 이식한 것 — 참고: gn-voice
@@ -67,12 +67,12 @@ fingerprint `sent_words`(p10/p50/p90/mean), `punct_per_1k`, 단락 지표
 
 - 코퍼스 실측 0회 패턴 (fingerprint `endings`/`markers_per_1k_words`에서
   등장하지 않는 항목)
-- AI 상투구 (`scripts/verify_sermon.py`의 `DEFAULT_AI_TELLS` 참고)
+- AI 상투구 (`{skill_root}/shared/scripts/verify_sermon.py`의 `DEFAULT_AI_TELLS` 참고)
 - `vocabulary.md`의 "피하는 표현" 절과 연동
 
 ## sermon-rules.json 스키마
 
-`scripts/verify_sermon.py`가 소비하는 게이트 규칙. profile 스킬이 fingerprint
+`{skill_root}/shared/scripts/verify_sermon.py`가 소비하는 게이트 규칙. profile 스킬이 fingerprint
 JSON을 근거로 생성한다.
 
 ```json
@@ -92,7 +92,15 @@ JSON을 근거로 생성한다.
 ```
 
 - **`bands`**: 초안 실측치가 이 범위를 벗어나면 위반. 기본값은
-  `fingerprint` 실측치의 **±20%**를 저/고 경계로 사용한다.
+  `fingerprint` 실측치의 **±20%**를 저/고 경계로 사용하되, **최소 절대
+  마진**을 함께 적용한다 (±20%가 0에 가까운 실측치에서는 밴드가 사실상
+  `[0, 0]`이 되어 정상적인 변동조차 위반으로 잡히는 문제를 막기 위함):
+  - per-1k 지표(`question_per_1k`, `exclam_per_1k`)는 `max(±20%, ±0.5)`
+  - `sent_p50`은 `max(±20%, ±2)`
+  - `ending_family_share`는 `max(±20%, ±0.1)` (상한은 1.0, 하한은 0으로
+    clamp)
+  - 실측치가 0인 지표는 절대로 `[0, 0]` 밴드를 만들지 않는다 — 위 최소
+    마진을 그대로 적용해 `[0, margin]`으로 잡는다.
   - `ending_family_share`는 fingerprint `endings` 중 **습니다 + ㅂ니다**
     두 버킷의 합이다 (두 어미 계열을 하나의 존댓말 골격으로 묶어 잰다 —
     literal한 한 단어 종결 패턴이 아니라 family 합산임에 주의).
@@ -107,9 +115,13 @@ JSON을 근거로 생성한다.
 
 ## 생성 절차 (publish-profile 연동)
 
-1. `python3 scripts/sermon_fingerprint.py <설교 코퍼스 경로> -o authors/{author_id}/sermon-fingerprint.json`
+1. `python3 "{skill_root}/shared/scripts/sermon_fingerprint.py" <설교 코퍼스 경로> -o authors/{author_id}/sermon-fingerprint.json`
+   (워크스페이스에서 실행. `{skill_root}` = 이 스킬이 설치된 디렉토리, 일반적으로
+   `~/.claude/skills/publish-agent`; 리포에서 직접 쓸 때는 `<repo>/skills`.
+   Windows에서는 `python3` 대신 `py -3` 사용.)
 2. fingerprint JSON을 근거로 위 6섹션 `sermon-pack.md` 작성 (수치 인용 필수)
-3. fingerprint JSON의 밴드 대상 지표에서 ±20% 범위를 계산해 `sermon-rules.json`
-   작성 (`must_zero`는 vocabulary.md, `signatures`는 시그니처 섹션 상위 항목에서)
+3. fingerprint JSON의 밴드 대상 지표에서 위 "최소 절대 마진 포함 ±20%" 규칙으로
+   범위를 계산해 `sermon-rules.json` 작성 (`must_zero`는 vocabulary.md,
+   `signatures`는 시그니처 섹션 상위 항목에서)
 4. `authors/{author_id}/custom-sermon-pack.md`가 있으면 이 표준 스키마 대신
    해당 파일의 지침을 우선 적용

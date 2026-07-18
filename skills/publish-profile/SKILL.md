@@ -315,17 +315,23 @@ LLM 판단(4차원 분석)과 달리 이 팩은 fingerprint 실측치를 게이�
 
 절차:
 
-1. 설교 코퍼스(.md/.txt 폴더)에 대해 fingerprint를 실행한다:
+1. 설교 코퍼스(.md/.txt 폴더)에 대해 fingerprint를 실행한다 (워크스페이스에서 실행):
    ```
-   python3 scripts/sermon_fingerprint.py <설교 코퍼스 경로> -o authors/{author_id}/sermon-fingerprint.json
+   python3 "{skill_root}/shared/scripts/sermon_fingerprint.py" <설교 코퍼스 경로> -o authors/{author_id}/sermon-fingerprint.json
    ```
+   `{skill_root}` = 이 스킬이 설치된 디렉토리 (일반적으로 `~/.claude/skills/publish-agent`;
+   리포에서 직접 쓸 때는 `<repo>/skills`). Windows에서는 `python3` 대신 `py -3` 사용.
 2. fingerprint JSON을 근거로 `authors/{author_id}/sermon-pack.md`를 작성한다.
    스키마와 6섹션(레지스터/시그니처/리듬/설교 구조 관습/대조페어/Do-NOT)은
    `shared/references/sermon-pack-schema.md`를 따른다. **모든 수치는
    fingerprint 실측만 인용 — 추정 금지.**
 3. 같은 fingerprint를 근거로 `authors/{author_id}/sermon-rules.json`을
    작성한다: `bands`는 밴드 대상 지표(`sent_p50`, `ending_family_share`,
-   `question_per_1k`, `exclam_per_1k`)의 실측치 **±20%**를 기본으로 하고,
+   `question_per_1k`, `exclam_per_1k`)의 실측치 **±20%** (최소 절대 마진 포함:
+   `sent_p50`은 `max(±20%, ±2)`, `ending_family_share`는
+   `max(±20%, ±0.1)`(상한 1.0/하한 0으로 clamp), 나머지 per-1k 지표는
+   `max(±20%, ±0.5)`)를 기본으로 한다. 실측 0인 지표는 `[0, 0]` 밴드를 만들지
+   않는다 — 최소 마진을 적용해 `[0, margin]`으로 잡는다.
    `must_zero`는 vocabulary.md의 "피하는 표현"에서, `signatures`는 시그니처
    섹션 상위 표현에서 채운다.
 4. `authors/{author_id}/custom-sermon-pack.md`가 이미 존재하면 이 절차보다

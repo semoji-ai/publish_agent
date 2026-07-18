@@ -204,13 +204,16 @@ wiki/에서 관련 기사를 찾지 못했습니다.
 `authors/{author_id}/sermon-pack.md`가 존재하면 Step 5 자료 제시에 이 팩을
 **제약**으로 함께 참조한다(`custom-sermon-pack.md`가 있으면 그 파일 우선).
 사용자가 이 스킬로 설교 초안/원고 전체 작성까지 요청한 경우, 초안 완료 후
-기계 게이트를 돌린다:
+기계 게이트를 돌린다 (워크스페이스에서 실행):
 
 ```
-python3 scripts/verify_sermon.py <초안 파일> \
+python3 "{skill_root}/shared/scripts/verify_sermon.py" <초안 파일> \
   --fingerprint authors/{author_id}/sermon-fingerprint.json \
   --rules authors/{author_id}/sermon-rules.json
 ```
+
+`{skill_root}` = 이 스킬이 설치된 디렉토리 (일반적으로 `~/.claude/skills/publish-agent`;
+리포에서 직접 쓸 때는 `<repo>/skills`). Windows에서는 `python3` 대신 `py -3` 사용.
 
 `ok:false`이면 위반 목록을 근거로 재작성(최대 2회), 그래도 실패하면 남은
 위반을 사용자에게 그대로 보고한다. 자료 제시 단계(설교 준비 자료 종합)만

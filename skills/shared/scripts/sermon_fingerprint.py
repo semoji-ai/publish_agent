@@ -7,7 +7,10 @@ sermon_fingerprint.py — 설교 코퍼스 정량 문체 지표 (stdlib only, Py
 동일한 접근을 형태소 분석기 없이 단순화).
 
 CLI:
-    python3 scripts/sermon_fingerprint.py <corpus_dir> [-o out.json]
+    python3 "{skill_root}/shared/scripts/sermon_fingerprint.py" <corpus_dir> [-o out.json]
+
+    {skill_root} = 이 스킬이 설치된 디렉토리 (일반적으로 ~/.claude/skills/publish-agent;
+    리포에서 직접 쓸 때는 <repo>/skills). Windows에서는 python3 대신 py -3 사용.
 
 모듈:
     fingerprint(texts: list[str]) -> dict
