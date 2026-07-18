@@ -6,7 +6,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from sermon_fingerprint import fingerprint, load_corpus  # noqa: E402
+from sermon_fingerprint import classify_ending, fingerprint, load_corpus  # noqa: E402
 
 FIXTURES = ROOT / "tests" / "fixtures" / "corpus"
 
@@ -104,3 +104,19 @@ def test_verse_ref_does_not_split_sentence():
     sents = split_sentences(text)
     assert len(sents) == 2
     assert "(요 3:16)" in sents[0]
+
+
+def test_honorific_bnida_classified():
+    assert classify_ending("하나님께서 우리와 늘 함께하십니다.") == "ㅂ니다"
+    assert classify_ending("우리는 오늘도 갑니다.") == "ㅂ니다"
+    assert classify_ending("말씀을 봅니다.") == "ㅂ니다"
+    assert classify_ending("우리는 믿습니다.") == "습니다"
+
+
+def test_cheongyu_bsida_classified():
+    assert classify_ending("우리 함께 나눕시다.") == "ㅂ시다"
+    assert classify_ending("함께 갑시다.") == "ㅂ시다"
+
+
+def test_sipsio_not_bsida():
+    assert classify_ending("말씀을 붙드십시오.") == "십시오"
