@@ -199,8 +199,26 @@ wiki/에서 관련 기사를 찾지 못했습니다.
 
 ---
 
+## 설교 팩 (Sermon Pack)
+
+`authors/{author_id}/sermon-pack.md`가 존재하면 Step 5 자료 제시에 이 팩을
+**제약**으로 함께 참조한다(`custom-sermon-pack.md`가 있으면 그 파일 우선).
+사용자가 이 스킬로 설교 초안/원고 전체 작성까지 요청한 경우, 초안 완료 후
+기계 게이트를 돌린다:
+
+```
+python3 scripts/verify_sermon.py <초안 파일> \
+  --fingerprint authors/{author_id}/sermon-fingerprint.json \
+  --rules authors/{author_id}/sermon-rules.json
+```
+
+`ok:false`이면 위반 목록을 근거로 재작성(최대 2회), 그래도 실패하면 남은
+위반을 사용자에게 그대로 보고한다. 자료 제시 단계(설교 준비 자료 종합)만
+수행하는 경우에는 이 게이트를 실행하지 않는다 — 초안이 아직 없기 때문이다.
+
 ## 참조 문서
 
 - `shared/references/search-strategy.md` — 계층적 검색 전략 상세
 - `shared/references/workspace-schema.md` — wiki/ 구조 및 카테고리 정의
 - `shared/references/author-profile-schema.md` — 저자 프로필 활용 방법
+- `shared/references/sermon-pack-schema.md` — 설교 팩(sermon-pack.md/sermon-rules.json) 스키마

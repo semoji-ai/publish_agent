@@ -41,6 +41,24 @@ KB(wiki/)와 저자 프로필(authors/)을 기준으로 초안을 심사하고 �
 
 ## WHEN TRIGGERED - EXECUTE IMMEDIATELY
 
+### Step 0: 설교 팩 게이트 확인 (선행)
+
+`authors/{author_id}/sermon-pack.md`와 `sermon-rules.json`이 존재하는
+초안(설교집/강해서/설교문)이면, rubric 심사(Step 4)보다 **먼저** 기계
+게이트를 확인한다.
+
+- 게이트가 아직 실행되지 않았으면 직접 실행한다:
+  ```
+  python3 scripts/verify_sermon.py <초안 파일> \
+    --fingerprint authors/{author_id}/sermon-fingerprint.json \
+    --rules authors/{author_id}/sermon-rules.json
+  ```
+- `ok:false`이면 위반 목록을 사용자에게 먼저 보고하고, rubric 심사는 게이트
+  통과본(재작성 후 재실행하여 ok:true가 된 버전)에 대해서만 수행한다.
+  사용자가 게이트 미통과 상태로도 rubric 심사를 강행하길 원하면 그 요청을
+  따르되, 리포트에 "게이트 미통과 상태에서 심사됨"을 명시한다.
+- `sermon-pack.md`/`sermon-rules.json`이 없으면 이 Step은 건너뛴다.
+
 ### Step 1: 심사 대상 확인
 
 config.yaml에서 워크스페이스 경로와 author_id를 로드한다.
@@ -139,6 +157,16 @@ KB 기사는 심사 시 "저자가 이 주제에 대해 이전에 어떻게 다�
 - 이슈별 위치 인용 (파일명 + 문장/단락)
 - 구체적 수정 제안
 - 종합 판정 (PASS / CONDITIONAL / REVISE)
+
+Step 0에서 설교 팩 게이트를 실행한 경우, 리포트에 **기계 실측치 표**를
+포함한다 (verify_sermon.py 출력의 bands 실측치 vs 기대 범위):
+
+```
+| 지표 | 실측 | 기대 범위 | 판정 |
+|---|---|---|---|
+| sent_p50 | 7.2 | [5, 9] | PASS |
+| ending_family_share | 0.55 | [0.4, 0.8] | PASS |
+```
 
 심사 라운드 번호를 리포트 파일명에 포함한다:
 - 1회차: `{YYYYMMDD}_review_r1.md`

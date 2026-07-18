@@ -228,12 +228,37 @@ wiki 참조 기사: {K}개
 - 교회 뉴스레터 모드
 - 특정 시리즈물 템플릿
 
+## 설교 팩 (Sermon Pack)
+
+`authors/{author_id}/sermon-pack.md`가 존재하면(설교집/강해서 모드),
+Step 2 프로필 로드에 이어 이 팩을 **집필 제약**으로 함께 로드한다. 6섹션
+(레지스터/시그니처/리듬/설교 구조 관습/대조페어/Do-NOT)의 지침을 초안 작성
+전체에 반영한다. `custom-sermon-pack.md`가 있으면 그 파일이 우선한다.
+
+챕터(또는 설교문) 초안 완료 후, Step 4 자기 검증에 이어 기계 게이트를 돌린다:
+
+```
+python3 scripts/verify_sermon.py <초안 파일> \
+  --fingerprint authors/{author_id}/sermon-fingerprint.json \
+  --rules authors/{author_id}/sermon-rules.json
+```
+
+- `ok:true` → 통과, 정상 진행.
+- `ok:false` → 위반 목록(check/expected/actual/evidence)을 근거로 해당 부분을
+  재작성한다. **최대 2회**까지 재시도.
+- 2회 재작성 후에도 `ok:false`이면 재작성을 멈추고, 남은 위반 목록을 있는
+  그대로 사용자에게 보고한다 (통과한 것처럼 감추지 않는다).
+
+sermon-pack.md/sermon-rules.json이 없으면 이 절차를 건너뛰고 기존 자기 검증
+체크리스트만 수행한다.
+
 ## 참조 문서
 
 - `shared/references/search-strategy.md` — wiki/ 계층적 요약 검색 전략
 - `shared/references/workspace-schema.md` — project.yaml 스키마 + 워크스페이스 구조
 - `shared/references/author-profile-schema.md` — 저자 프로필 4파일 스키마
 - `shared/references/context-management.md` — 컨텍스트 윈도우 관리 전략 + 챕터별 토큰 예산
+- `shared/references/sermon-pack-schema.md` — 설교 팩(sermon-pack.md/sermon-rules.json) 스키마
 - `publish-write/references/writing-modes.md` — 프로젝트 유형별 상세 가이드 (공통)
 - `publish-write/references/custom-modes.md` — 사용자별 추가 집필 모드 (있으면 추가 적용)
 - proposal.md (프로젝트 디렉토리 내) — 기획 의도·독자·메시지 맥락 (집필 방향 참조용)

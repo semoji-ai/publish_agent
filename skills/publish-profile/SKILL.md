@@ -307,10 +307,37 @@ audience_address: ""
 
 ---
 
+## 설교 팩 (Sermon Pack)
+
+설교 코퍼스가 있는 경우, 4차원 분석과 별도로 **수치 기반 설교 팩**을 생성한다.
+LLM 판단(4차원 분석)과 달리 이 팩은 fingerprint 실측치를 게이트로 삼아
+`/publish-write`, `/publish-sermon`이 초안을 기계적으로 검증할 수 있게 한다.
+
+절차:
+
+1. 설교 코퍼스(.md/.txt 폴더)에 대해 fingerprint를 실행한다:
+   ```
+   python3 scripts/sermon_fingerprint.py <설교 코퍼스 경로> -o authors/{author_id}/sermon-fingerprint.json
+   ```
+2. fingerprint JSON을 근거로 `authors/{author_id}/sermon-pack.md`를 작성한다.
+   스키마와 6섹션(레지스터/시그니처/리듬/설교 구조 관습/대조페어/Do-NOT)은
+   `shared/references/sermon-pack-schema.md`를 따른다. **모든 수치는
+   fingerprint 실측만 인용 — 추정 금지.**
+3. 같은 fingerprint를 근거로 `authors/{author_id}/sermon-rules.json`을
+   작성한다: `bands`는 밴드 대상 지표(`sent_p50`, `ending_family_share`,
+   `question_per_1k`, `exclam_per_1k`)의 실측치 **±20%**를 기본으로 하고,
+   `must_zero`는 vocabulary.md의 "피하는 표현"에서, `signatures`는 시그니처
+   섹션 상위 표현에서 채운다.
+4. `authors/{author_id}/custom-sermon-pack.md`가 이미 존재하면 이 절차보다
+   **우선** 적용한다 (교회별 커스텀 팩 — church-branch merge 안전 규칙).
+5. Step 9 완료 리포트에 sermon-pack.md / sermon-rules.json 생성 여부를
+   추가로 안내한다.
+
 ## 참조 문서
 
 - `shared/references/author-profile-schema.md` — 저자 프로필 4파일 스키마 전체
 - `shared/references/workspace-schema.md` — 워크스페이스 구조 + config.yaml 스키마
 - `shared/references/search-strategy.md` — wiki/ 계층 검색 전략
 - `shared/references/context-management.md` — 컨텍스트 윈도우 관리 전략 + 샘플링 패턴
+- `shared/references/sermon-pack-schema.md` — 설교 팩(sermon-pack.md/sermon-rules.json) 스키마
 - `publish-profile/references/analysis-dimensions.md` — 4차원 분석 상세 기준

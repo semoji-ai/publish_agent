@@ -60,7 +60,7 @@ gn-voice 팩 해부 구조를 설교용 6섹션으로:
 rules.json (팩과 함께 profile이 생성, 스키마 고정):
 ```json
 {
-  "bands": {"sent_p50": [저, 고], "ending_top1_share": [저, 고],
+  "bands": {"sent_p50": [저, 고], "ending_family_share": [저, 고],
              "question_per_1k": [저, 고], "exclam_per_1k": [저, 고]},
   "must_zero": ["결론부터 말씀드리면", "요약하자면", ...],
   "signatures": [{"expr": "사랑하는 성도 여러분", "min_per_doc": 1}, ...],
