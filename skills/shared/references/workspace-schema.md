@@ -64,7 +64,7 @@ description: Publish Agent 워크스페이스 구조 및 전체 YAML/JSON 스키
 │   └── {project_name}/
 │       ├── project.yaml            # 프로젝트 설정 (스키마 → 4.6)
 │       ├── drafts/                 # 챕터별 초안 마크다운
-│       ├── reviews/                # 심사 리포트 ({date}_review.md)
+│       ├── reviews/                # 심사 리포트 ({date}_review_r{N}.md)
 │       └── exports/                # 최종 출력물 (DOCX, PDF, ePub)
 │           ├── docx/
 │           ├── pdf/

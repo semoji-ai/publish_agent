@@ -33,7 +33,7 @@ description: Use when users say "/publish-profile", "내 문체 분석해줘", "
 
 ---
 
-## WHEN TRIGGERED - EXECUTE IMMEDIATELY
+## 실행 절차
 
 ### Step 1: config.yaml 로드
 

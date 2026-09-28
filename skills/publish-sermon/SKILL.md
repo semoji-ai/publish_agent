@@ -28,7 +28,7 @@ description: Use when users say "/publish-sermon", "설교 준비 도와줘", "�
 
 ---
 
-## WHEN TRIGGERED - EXECUTE IMMEDIATELY
+## 실행 절차
 
 ### Step 1: 사용자 질문 파악
 

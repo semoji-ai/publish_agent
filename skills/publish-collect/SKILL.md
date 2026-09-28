@@ -37,7 +37,7 @@ English:
 
 ---
 
-## WHEN TRIGGERED - EXECUTE IMMEDIATELY
+## 실행 절차
 
 ### Step 1: config.yaml 로드
 

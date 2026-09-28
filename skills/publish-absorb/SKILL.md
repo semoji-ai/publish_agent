@@ -34,7 +34,7 @@ description: Use when users say "/publish-absorb", "위키 업데이트해줘", 
 
 ---
 
-## WHEN TRIGGERED - EXECUTE IMMEDIATELY
+## 실행 절차
 
 ### Step 0: 스냅샷 생성 (pre_absorb)
 

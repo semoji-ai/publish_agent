@@ -39,7 +39,7 @@ KB(wiki/)와 저자 프로필(authors/)을 기준으로 초안을 심사하고 �
 
 ---
 
-## WHEN TRIGGERED - EXECUTE IMMEDIATELY
+## 실행 절차
 
 ### Step 0: 설교 팩 게이트 확인 (선행)
 
@@ -152,7 +152,7 @@ KB 기사는 심사 시 "저자가 이 주제에 대해 이전에 어떻게 다�
 
 ### Step 5: 심사 리포트 생성
 
-심사 결과를 `projects/{project_name}/reviews/{YYYYMMDD}_review.md`에 저장한다.
+심사 결과를 `projects/{project_name}/reviews/{YYYYMMDD}_review_r{N}.md`에 저장한다 (N = 심사 회차, 아래 참조).
 
 리포트 포맷은 `publish-review/references/review-rubric.md`의 리포트 템플릿을 따른다:
 - 각 차원별 등급(A/B/C/D)과 구체적 근거

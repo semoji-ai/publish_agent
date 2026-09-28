@@ -25,7 +25,7 @@ description: Use when users say "/publish-setup", "워크스페이스 만들어�
 
 ---
 
-## WHEN TRIGGERED - EXECUTE IMMEDIATELY
+## 실행 절차
 
 ### Step 1: 사용자 정보 수집
 

@@ -36,7 +36,7 @@ description: Use when users say "/publish-plan", "기획해줘", "책 기획", "
 
 ---
 
-## WHEN TRIGGERED - EXECUTE IMMEDIATELY
+## 실행 절차
 
 ### Step 0: plans/ 디렉토리 확인
 

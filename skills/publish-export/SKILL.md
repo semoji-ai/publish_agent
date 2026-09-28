@@ -40,7 +40,7 @@ description: Use when users say "/publish-export", "PDF로 만들어줘", "출�
 
 ---
 
-## WHEN TRIGGERED - EXECUTE IMMEDIATELY
+## 실행 절차
 
 ### Step 1: 대상 프로젝트 선택
 

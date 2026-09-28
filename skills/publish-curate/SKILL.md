@@ -35,7 +35,7 @@ description: Use when users say "/publish-curate", "위키 정리해줘", "인�
 
 ---
 
-## WHEN TRIGGERED - EXECUTE IMMEDIATELY
+## 실행 절차
 
 ### Step 1: 검수 모드 선택
 

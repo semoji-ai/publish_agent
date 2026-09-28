@@ -156,7 +156,7 @@ xelatex --version   # PDF export용 (선택)
 
 1. main에서 `skills/{skill-name}/SKILL.md` 생성
 2. frontmatter: `name`, `description` (한/영 트리거 포함)
-3. `WHEN TRIGGERED - EXECUTE IMMEDIATELY` 패턴 준수
+3. 본문의 절차는 `## 실행 절차` 헤딩 아래에 둔다
 4. 참조 문서는 `skills/{skill-name}/references/`에 배치
 5. 공유 참조는 `shared/references/`에 배치
 6. 컨텍스트 관리: `context-management.md` 규칙 준수 (500줄 제한, 토큰 예산)

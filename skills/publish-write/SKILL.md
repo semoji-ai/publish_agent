@@ -36,7 +36,7 @@ description: Use when users say "/publish-write", "책 써줘", "초안 작성�
 
 ---
 
-## WHEN TRIGGERED - EXECUTE IMMEDIATELY
+## 실행 절차
 
 ### Step 1: 프로젝트 선택
 
